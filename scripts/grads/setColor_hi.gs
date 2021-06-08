@@ -1,0 +1,6 @@
+'rainccol'
+*'set clevs 50 100 150 200 250 300 350 400'
+*'set clevs 10 20 30 40 50 60 70 80 90 100'
+*'set ccols 0 93 90 84 21 23 24 27 29 6 14'
+'color -levs 27 32 41 54 -kind white->khaki->darkorange->firebrick->darkorchid -gxout grfill'
+
