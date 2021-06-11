@@ -29,9 +29,12 @@ ln -s namelist.input_${NAMELIST_SUFF} namelist.input
 # -------------------------------------------- #
 #                Run Real.exe                  #
 # -------------------------------------------- #
+echo "  ********************  "
 echo " Running real "
+echo "  ********************  "
 rm -f wrfbdy* wrfinput* 
 srun ./real.exe >& log.real & tail --pid=$! -f rsl.error.0000
+echo "  ********************  "
 echo " End of REAL "
 echo "  ********************  "
 
@@ -39,8 +42,11 @@ echo "  ********************  "
 # -------------------------------------------- #
 #                Run WRF.exe                   #
 # -------------------------------------------- #
+echo "  ********************  "
 echo " Running WRF "
+echo "  ********************  "
 srun ./wrf.exe >& log.wrf & tail --pid=$! -f rsl.error.0000
+echo "  ********************  "
 echo " End of WRF "
 echo "  ********************  "
 
