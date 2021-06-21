@@ -14,7 +14,7 @@ export WRF_MAINDIR=${MAINDIR}/model
 export WRF_REALDIR=${MAINDIR}/model/WRF
 
 export WRFRES=5
-export WRF_FCST_DAYS=3
+export WRF_FCST_DAYS=5
 # export NAMELIST_SUFF=cmpXfcst25-5km
 # export NAMELIST_SUFF=wcr_luzon
 # export NAMELIST_SUFF=mowcr_D1

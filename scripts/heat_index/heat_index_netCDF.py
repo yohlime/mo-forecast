@@ -5,9 +5,9 @@
 #change initialization and variables for automation
 #yyyymmdd and init are in local time (PHT)
 #mm = choose climatological month
-yyyymmdd = '2021-06-08'
-init = '08'
-EXTRACT_DIR = "/home/modelman/forecast/scripts/grads/nc"
+yyyymmdd = '2021-06-20'
+init = '20'
+EXTRACT_DIR = '/home/modelman/forecast/scripts/grads/nc'
 
 from pathlib import Path
 import pandas as pd

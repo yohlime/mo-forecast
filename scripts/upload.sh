@@ -16,8 +16,6 @@ rm -f ${MAINDIR}/output/latest/*.png
 
 find ${MAINDIR}/output/ -type f -name "wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png" -exec cp {} ${MAINDIR}/output/latest/ \;
 cp -p ${MAINDIR}/output/timeseries/img/forecast_$YY2-$mm2-${dd2}_${HH2}PHT.png ${MAINDIR}/output/latest/ts_forecast_$YY2-$mm2-${dd2}_${HH2}PHT.png
-#for MO Davao station
-#cp -p ${MAINDIR}/output/timeseries/img/forecast_MOD_$YY2-$mm2-${dd2}_${HH2}PHT.png ${MAINDIR}/output/latest/ts_forecast_$YY2-$mm2-${dd2}_${HH2}PHT.png
 # rename _$YY2-$mm2-${dd2}_${HH2}PHT.png .png ${MAINDIR}/output/latest/*$YY2-$mm2-${dd2}_${HH2}PHT.png
 for f in ${MAINDIR}/output/latest/*$YY2-$mm2-${dd2}_${HH2}PHT.png ; do mv -v "$f" ${f%_$YY2-$mm2-${dd2}_${HH2}PHT.png}.png; done
 
@@ -37,6 +35,9 @@ cat > ${MAINDIR}/output/latest/info.json <<EOL
 EOL
 
 scp ${MAINDIR}/output/latest/info.json panahon.linode:~/websites/panahon/resources/model/
+
+# data dump for Doc JP
+rclone copy ${MAINDIR}/output/timeseries/csv/${FCST_YYYYMMDD}/${FCST_ZZ} emil_mo_wcr:output/csv/${FCST_YYYYMMDD}/${FCST_ZZ}/
 
 echo "-------------------------"
 echo " Done uploading files!!! "

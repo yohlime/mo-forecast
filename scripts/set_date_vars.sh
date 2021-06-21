@@ -15,4 +15,5 @@ export FCST_MM2=${FCST_YYYYMMDD2:4:2}
 export FCST_DD2=${FCST_YYYYMMDD2:6:2}
 
 export GFSDIR=$MAINDIR/input/gfs_files/$FCST_YYYYMMDD/$FCST_ZZ
+export NUM_FILES=$(($WRF_FCST_DAYS*24+1))
 ########## Dynamic Variables ##########

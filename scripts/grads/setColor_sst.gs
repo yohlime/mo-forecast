@@ -5,4 +5,7 @@
 *'color 20 30 2 -kind khaki->orangered->maroon'
 *'color 25 30 1 -kind wheat->chocolate->saddlebrown->(84,0,0)'
 *'color 25 30 1 -kind navy->(43,131,186)->(171,221,164)->(255,255,191)' 
+*'color 20 40 4 -kind khaki->orangered->maroon->darkorchid'
 'color 20 40 4 -kind khaki->orangered->maroon->darkorchid'
+
+

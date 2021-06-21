@@ -13,7 +13,7 @@ source $SCRIPT_DIR/download_gfs.aria2.sh
 
 NDL_FILES=$(ls $GFSDIR/*.grb | wc -l)
 
-if [ $NDL_FILES -eq 73 ]; then
+if [ $NDL_FILES -eq $NUM_FILES ]; then
 
   # WPS
   wps_slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -J wps-$FCST_YYYYMMDD$FCST_ZZ -o $WRF_MAINDIR/WPS/wps_$FCST_YYYYMMDD$FCST_ZZ.out -n $SLURM_WPS_NTASKS"
@@ -34,8 +34,8 @@ if [ $NDL_FILES -eq 73 ]; then
   arw_job_id=$(echo $arw_job_id | tr -dc '0-9')
 
   # Upload
-  #  upload_slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$arw_job_id -J upload-$FCST_YYYYMMDD$FCST_ZZ -o $MAINDIR/output/upload_$FCST_YYYYMMDD$FCST_ZZ.log -n 1"
-  #  upload_job_id=$(sbatch $upload_slurm_opts $SCRIPT_DIR/upload.sh)
-  #  upload_job_id=$(echo $upload_job_id | tr -dc '0-9')
+  upload_slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$arw_job_id -J upload-$FCST_YYYYMMDD$FCST_ZZ -o $MAINDIR/output/upload_$FCST_YYYYMMDD$FCST_ZZ.log -n 1"
+  upload_job_id=$(sbatch $upload_slurm_opts $SCRIPT_DIR/upload.sh)
+  upload_job_id=$(echo $upload_job_id | tr -dc '0-9')
 
 fi

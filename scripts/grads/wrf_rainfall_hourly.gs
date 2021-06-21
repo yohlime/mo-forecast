@@ -1,12 +1,12 @@
-date='2021-06-08_08PHT'
+date='2021-06-20_20PHT'
 outdir='/home/modelman/forecast/output/hourly'
-date2='2021-06-08_08 PHT'
-'open /home/modelman/forecast/model/ARWpost/mowcr_D1/wrffcst_d01_2021-06-08_00.ctl'
+date2='2021-06-16_08 PHT'
+'open /home/modelman/forecast/model/ARWpost/mowcr_solar/wrffcst_d01_2021-06-20_12.ctl'
 shpsrc='/home/modelman/forecast/scripts/shp'
 **Set up plotting resources
 
 'set mpdset hires'
-'set display color white'
+date2='2021-06-20_20 PHT'
 'c'
 'set grid off'
 'set gxout shaded'
