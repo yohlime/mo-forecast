@@ -1,0 +1,7 @@
+'set rgb 99 255 255 255 200'
+'set line 99 1'
+'draw recf 1.4 1.6 3.25 2'
+'set line 1'
+'draw rec 1.4 1.6 3.25 2'
+'set string 1 c 5.5 0'
+'set strsiz 0.15'

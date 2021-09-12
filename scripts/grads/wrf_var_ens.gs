@@ -1,14 +1,14 @@
-date='2020-03-23_02PHT'
-d1title='2020-03-23_02 to 2020-03-24_02 PHT'
-d2title='2020-03-24_02 to 2020-03-25_02 PHT'
-d3title='2020-03-25_02 to 2020-03-26_02 PHT'
-d4title='2020-03-26_02 to 2020-03-27_02 PHT'
-d5title='2020-03-27_02 to 2020-03-28_02 PHT'
+date='2021-09-11_08PHT'
+d1title='2021-09-11_08 to 2021-09-12_08 PHT'
+d2title='2021-09-12_08 to 2021-09-13_08 PHT'
+d3title='2021-09-13_08 to 2021-09-14_08 PHT'
+d4title='2021-09-14_08 to 2021-09-15_08 PHT'
+d5title='2021-09-15_08 to 2021-09-16_08 PHT'
 outdir='/home/modelman/forecast/output/maps'
 wrfres='5'
-date2='2020-03-23_02 PHT'
+date2='2021-09-11_08 PHT'
 
-'open /home/modelman/forecast/model/ARWpost/mowcr_solar/wrffcst_d01_2020-03-22_18.ctl'
+'sdfopen /home/modelman/forecast/model/ENSEMBLE/wrffcst_d01_2021-09-11_00_ens.nc'
 
 shpsrc='/home/modelman/forecast/scripts/shp'
 
@@ -87,7 +87,7 @@ t=substr(titles,j,34)
     'draw shp 'shpsrc'/world_shp/country.shp'
     'set string 1 c 5.5 0'
     'set strsiz 0.075'
-    'draw string 4.25 0.8 WRF Forecast Initialized at 'date2
+    'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
     'set strsiz 0.15'
     'set string 1 tc 5.5 0'
     'draw string 4.25 10.9 24-Hr Total Rainfall(mm)'
@@ -98,7 +98,7 @@ t=substr(titles,j,34)
     'draw string 7.5 8.85 [mm]'
     'setLabel_MO'
     'draw string 2.33 1.79 observatory.ph'
-    'gxprint 'outdir'/wrf-'h'hr_rain_day'i'_'date'.png'
+    'gxprint 'outdir'/wrf-24hr_rain_day'i'_'date'.png'
 k=k+1
 i=i+1
 endwhile
@@ -128,7 +128,7 @@ t=substr(titles,j,34)
     'draw shp 'shpsrc'/world_shp/country.shp'
     'set string 1 c 5.5 0'
     'set strsiz 0.075'
-    'draw string 4.25 0.8 WRF Forecast Initialized at 'date2
+    'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
     'set strsiz 0.15'
     'set string 1 tc 5.5 0'
     'draw string 4.25 10.9 'h'-Hr Total Rainfall(mm)'
@@ -172,7 +172,7 @@ t=substr(titles,j,34)
     'draw shp 'shpsrc'/world_shp/country.shp'
     'set string 1 c 5.5 0'
     'set strsiz 0.075'
-    'draw string 4.25 0.8 WRF Forecast Initialized at 'date2
+    'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
     'set strsiz 0.15'
     'set string 1 tc 5.5 0'
     'draw string 4.25 10.9 Winds( 850mb | m/s)'
@@ -212,7 +212,7 @@ t=substr(titles,j,34)
     'draw shp 'shpsrc'/world_shp/country.shp'
     'set string 1 c 5.5 0'
     'set strsiz 0.075'
-    'draw string 4.25 0.8 WRF Forecast Initialized at 'date2
+    'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
     'set strsiz 0.15'
     'set string 1 tc 5.5 0'
     'draw string 4.25 10.9 Relative Humidity( 2m | % )'
@@ -261,7 +261,7 @@ t=substr(titles,j,34)
     'draw shp 'shpsrc'/world_shp/country.shp'
     'set string 1 c 5.5 0'
     'set strsiz 0.075'
-    'draw string 4.25 0.8 WRF Forecast Initialized at 'date2
+    'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
     'set strsiz 0.15'
     'set string 1 tc 5.5 0'
     'draw string 4.25 10.9 Air (2m) and Sea Surface Temperature ( `3.`0C )'

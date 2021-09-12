@@ -1,14 +1,14 @@
-date='2020-03-23_02PHT'
-d1title='2020-03-23_02 to 2020-03-24_02 PHT'
-d2title='2020-03-24_02 to 2020-03-25_02 PHT'
-d3title='2020-03-25_02 to 2020-03-26_02 PHT'
-d4title='2020-03-26_02 to 2020-03-27_02 PHT'
-d5title='2020-03-27_02 to 2020-03-28_02 PHT'
+date='2021-09-11_08PHT'
+d1title='2021-09-11_08 to 2021-09-12_08 PHT'
+d2title='2021-09-12_08 to 2021-09-13_08 PHT'
+d3title='2021-09-13_08 to 2021-09-14_08 PHT'
+d4title='2021-09-14_08 to 2021-09-15_08 PHT'
+d5title='2021-09-15_08 to 2021-09-16_08 PHT'
 outdir='/home/modelman/forecast/output/maps'
 wrfres='5'
-date2='2020-03-23_02 PHT'
+date2='2021-09-11_08 PHT'
 
-'sdfopen /home/modelman/forecast/scripts/grads/nc/wrf-HI_2020-03-23_02PHT.nc'
+'sdfopen /home/modelman/forecast/scripts/grads/nc/wrf-HI_2021-09-11_08PHT.nc'
 
 shpsrc='/home/modelman/forecast/scripts/shp'
 
@@ -28,12 +28,18 @@ shpsrc='/home/modelman/forecast/scripts/shp'
 'set gxout shaded'
 'set lat 5 20'
 'set lon 116 128'
+'set xlint 5'
+'set ylint 5'
 
 *** plot 24hr acc precip
 say Processing 24hr forecast...
 'set t 25'
 say Saving 24hr forecast image...
 'c'
+'set xlint 5'
+'set ylint 5'
+'set xlopts 1 1 0.2'
+'set ylopts 1 1 0.2'
 'set grads off'
 'set mpdraw off'
 'set gxout shaded'
@@ -43,7 +49,7 @@ say Saving 24hr forecast image...
 
 'set string 1 c 5.5 0'
 'set strsiz 0.075'
-'draw string 5.5 0.8 WRF Forecast Initialized at 'date2
+'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
 'set strsiz 0.15'
 'set string 1 tc 5.5 0'
 'draw string 4.25 10.9 Heat Index( `3.`0C )'
@@ -70,6 +76,10 @@ say Processing 48hr forecast...
 'set t 49'
 say Saving 48hr forecast image...
 'c'
+'set xlint 5'
+'set ylint 5'
+'set xlopts 1 1 0.2'
+'set ylopts 1 1 0.2'
 'set grads off'
 'set mpdraw off'
 'set gxout shaded'
@@ -78,7 +88,7 @@ say Saving 48hr forecast image...
 'd hi*mask'
 
 'set strsiz 0.075'
-'draw string 5.5 0.8 WRF Forecast Initialized at 'date2
+'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
 'set strsiz 0.15'
 'set string 1 tc 5.5 0'
 'draw string 4.25 10.9 Heat Index( `3.`0C )'
@@ -107,7 +117,10 @@ say Processing 72hr forecast...
 *'define w72dir=u,v'
 say Saving 72hr forecast image...
 'c'
-
+'set xlint 5'
+'set ylint 5'
+'set xlopts 1 1 0.2'
+'set ylopts 1 1 0.2'
 'set grads off'
 'set mpdraw off'
 'set gxout shaded'
@@ -116,7 +129,7 @@ say Saving 72hr forecast image...
 'd hi*mask'
 
 'set strsiz 0.075'
-'draw string 5.5 0.8 WRF Forecast Initialized at 'date2
+'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
 'set strsiz 0.15'
 'set string 1 tc 5.5 0'
 'draw string 4.25 10.9 Heat Index( `3.`0C )'
@@ -145,7 +158,10 @@ say Processing 96hr forecast...
 *'define w96dir=u,v'
 say Saving 96hr forecast image...
 'c'
-
+'set xlint 5'
+'set ylint 5'
+'set xlopts 1 1 0.2'
+'set ylopts 1 1 0.2'
 'set grads off'
 'set mpdraw off'
 'set gxout shaded'
@@ -154,7 +170,7 @@ say Saving 96hr forecast image...
 'd hi*mask'
 
 'set strsiz 0.075'
-'draw string 5.5 0.8 WRF Forecast Initialized at 'date2
+'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
 'set strsiz 0.15'
 'set string 1 tc 5.5 0'
 'draw string 4.25 10.9 Heat Index( `3.`0C )'
@@ -183,7 +199,10 @@ say Processing 120hr forecast...
 *'define w120dir=u,v'
 say Saving 120hr forecast image...
 'c'
-
+'set xlint 5'
+'set ylint 5'
+'set xlopts 1 1 0.2'
+'set ylopts 1 1 0.2'
 'set grads off'
 'set mpdraw off'
 'set gxout shaded'
@@ -192,7 +211,7 @@ say Saving 120hr forecast image...
 'd hi*mask'
 
 'set strsiz 0.075'
-'draw string 5.5 0.8 WRF Forecast Initialized at 'date2
+'draw string 4.25 0.8 WRF Ensemble Forecast Initialized at 'date2
 'set strsiz 0.15'
 'set string 1 tc 5.5 0'
 'draw string 4.25 10.9 Heat Index( `3.`0C )'

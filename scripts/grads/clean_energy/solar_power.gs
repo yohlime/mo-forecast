@@ -1,14 +1,14 @@
-date='2021-06-20_20PHT'
-d1title='2021-06-20_20 to 2021-06-21_20 PHT'
-d2title='2021-06-21_20 to 2021-06-22_20 PHT'
-d3title='2021-06-22_20 to 2021-06-23_20 PHT'
-d4title='2021-06-23_20 to 2021-06-24_20 PHT'
-d5title='2021-06-24_20 to 2021-06-25_20 PHT'
+date='2020-03-23_02PHT'
+d1title='2020-03-23_02 to 2020-03-24_02 PHT'
+d2title='2020-03-24_02 to 2020-03-25_02 PHT'
+d3title='2020-03-25_02 to 2020-03-26_02 PHT'
+d4title='2020-03-26_02 to 2020-03-27_02 PHT'
+d5title='2020-03-27_02 to 2020-03-28_02 PHT'
 outdir='/home/modelman/forecast/output/maps'
 wrfres='5'
-date2='2021-06-20_20 PHT'
+date2='2020-03-23_02 PHT'
 
-'open /home/modelman/forecast/model/ARWpost/mowcr_solar/wrffcst_d01_2021-06-20_12.ctl'
+'open /home/modelman/forecast/model/ARWpost/mowcr_solar/wrffcst_d01_2020-03-22_18.ctl'
 
 shpsrc='/home/modelman/forecast/scripts/shp'
 
