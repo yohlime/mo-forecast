@@ -3,7 +3,7 @@
 
 yyyymmdd = '2021-09-11'
 init = '08'
-OUT_DIR = '/home/modelman/forecast/output/timeseries/csv/20210911/00'
+OUT_DIR = '/home/modelman/forecast/output/timeseries/csv_cities/20210911/00'
 IN_DIR = '/home/modelman/forecast/scripts/timeseries'
 #combine variables  rain, rh, t2 in one csv
 from pathlib import Path
@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df_stat = pd.read_csv(Path(IN_DIR) / f'csv/station_id.csv',names=['stations'])
+df_stat = pd.read_csv(Path(IN_DIR) / f'csv/cities_id.csv',names=['stations'])
 stations = df_stat['stations'].tolist()
 for i in stations:
 
