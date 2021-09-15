@@ -18,11 +18,7 @@ echo "---------------------------------"
 # -------------------------------------------- #
 
 cd $SCRIPT_DIR/python
-
-$PYTHONCONDA plot_maps.py -i ${WRF_OUT_FILE} -o ${OUTDIR}/.test/maps
-$PYTHONCONDA plot_maps_web.py -i ${WRF_OUT_FILE} -o ${OUTDIR}/.test/web/maps
-$PYTHONCONDA extract_points.py -i ${WRF_OUT_FILE} -o ${OUTDIR}/.test/web/json
-
+$PYTHONCONDA process_wrf.py -i ${WRF_OUT_FILE} -o ${OUTDIR}/.test
 
 echo "---------------------------------"
 echo " Python postprocessing finished! "
