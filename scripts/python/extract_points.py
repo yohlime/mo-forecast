@@ -31,6 +31,9 @@ def extract_points(ds, out_dir):
     da = ds["wpd"].mean("ens")
     da.name = "wndPow"
     _ds.append(da)
+    da = ds["wpd"].min("ens")
+    da.name = "wndPowMin"
+    _ds.append(da)
     da = ds["wpd"].max("ens")
     da.name = "wndPowMax"
     _ds.append(da)
@@ -42,6 +45,9 @@ def extract_points(ds, out_dir):
     da = ds["ppv"].mean("ens")
     da.name = "solPow"
     _ds.append(da)
+    da = ds["ppv"].min("ens")
+    da.name = "solPowMin"
+    _ds.append(da)
     da = ds["ppv"].max("ens")
     da.name = "solPowMax"
     _ds.append(da)
@@ -49,6 +55,9 @@ def extract_points(ds, out_dir):
 
     # region temp
     print("Processing temperature...")
+    da = ds["temp"].mean("ens")
+    da.name = "temp"
+    _ds.append(da)
     da = ds["temp"].min("ens")
     da.name = "tempMin"
     _ds.append(da)
@@ -65,6 +74,9 @@ def extract_points(ds, out_dir):
     _da.values = (u.values ** 2 + v.values ** 2) ** 0.5
     _da.values = _da.values * 3.6  # convert to kph
 
+    da = _da.mean("ens")
+    da.name = "wspd"
+    _ds.append(da)
     da = _da.min("ens")
     da.name = "wspdMin"
     _ds.append(da)
@@ -73,15 +85,20 @@ def extract_points(ds, out_dir):
     _ds.append(da)
     # end region wind
 
-    # region rainchance
+    # region rain
     print("Processing chance of rain...")
     _da = ds["rain"]
+
+    da = _da.mean("ens")
+    da.name = "rain"
+    _ds.append(da)
+
     _da = _da.where(_da <= 0.2, 1)
     _da = _da.where(_da > 0.2, 0)
     da = _da.mean("ens")
     da.name = "rainChance"
     _ds.append(da)
-    # end region rainchance
+    # end region rain
 
     _ds = xr.merge(_ds)
 
