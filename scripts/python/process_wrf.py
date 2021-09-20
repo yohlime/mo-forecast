@@ -3,6 +3,7 @@ import sys
 import getopt
 from pathlib import Path
 from datetime import timedelta
+from itertools import count
 import pandas as pd
 import xarray as xr
 import pytz
@@ -23,118 +24,136 @@ tz = pytz.timezone("Asia/Manila")
 
 
 def main(wrf_outs, out_dir):
-    timeidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
+    dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
 
-    ds = []
+    hr_ds = []
 
     # region rain
     print("Processing rain...")
-    _da = [wrf_getvar(wrf_outs, "prcp", t) for t in timeidxs]
-    for i, __da in enumerate(_da[1:]):
-        _da[i + 1].values = __da.values - _da[i].values
-    _da = xr.concat(_da, "time")
+    _da = wrf_getvar(wrf_outs, "prcp", None)
+    __da = []
+    for i in range(_da.time.shape[0]):
+        if i > 0:
+            d = _da.isel(time=i)
+            d.values = d.values - _da.isel(time=(i - 1)).values
+            __da.append(d)
+        else:
+            __da.append(_da.isel(time=i))
+    _da = xr.concat(__da, "time")
+    _da = _da.transpose("key_0", "time", ...)
     _da.name = "rain"
-    ds.append(_da)
+    hr_ds.append(_da)
     # endregion rain
 
     # region temp
     print("Processing 2m temperature...")
-    _da = [wrf_getvar(wrf_outs, "T2", t) for t in timeidxs]
-    _da = xr.concat(_da, "time")
+    _da = wrf_getvar(wrf_outs, "T2", None)
     _da = _da - 273.15
     _da.name = "temp"
-    ds.append(_da)
+    hr_ds.append(_da)
     # endregion temp
 
     # region tsk
     print("Processing tsk...")
-    _da = [wrf_getvar(wrf_outs, "TSK", t) for t in timeidxs]
-    _da = xr.concat(_da, "time")
+    _da = wrf_getvar(wrf_outs, "TSK", None)
     _da = _da - 273.15
     _da.name = "tsk"
-    ds.append(_da)
+    hr_ds.append(_da)
     # endregion tsk
 
     # region hi
     print("Processing heat index...")
-    _da = [wrf_getvar(wrf_outs, "hi", t) for t in timeidxs]
-    _da = xr.concat(_da, "time")
+    _da = wrf_getvar(wrf_outs, "hi", None)
     _da.name = "hi"
-    ds.append(_da)
+    hr_ds.append(_da)
     # endregion hi
 
     # region rh
     print("Processing 2m relative humidity...")
-    _da = [wrf_getvar(wrf_outs, "rh2", t) for t in timeidxs]
-    _da = xr.concat(_da, "time")
+    _da = wrf_getvar(wrf_outs, "rh2", None)
     _da.name = "rh"
-    ds.append(_da)
+    hr_ds.append(_da)
     # endregion rh
 
     # region wind
     print("Processing wind...")
-    u = [wrf_getvar(wrf_outs, "ua", t, levels=850, interp="pressure") for t in timeidxs]
+    u = [
+        wrf_getvar(wrf_outs, "ua", t, levels=850, interp="pressure")
+        for t in range(hr_ds[0].shape[1])
+    ]
     u = xr.concat(u, "time")
+    u = u.transpose("key_0", "time", ...)
     u.name = "u_850hPa"
     u = u.drop("level")
-    ds.append(u)
-    v = [wrf_getvar(wrf_outs, "va", t, levels=850, interp="pressure") for t in timeidxs]
+    hr_ds.append(u)
+    v = [
+        wrf_getvar(wrf_outs, "va", t, levels=850, interp="pressure")
+        for t in range(hr_ds[0].shape[1])
+    ]
     v = xr.concat(v, "time")
+    v = v.transpose("key_0", "time", ...)
     v.name = "v_850hPa"
     v = v.drop("level")
-    ds.append(v)
+    hr_ds.append(v)
     # endregion wind
 
     # region wpd
     print("Processing wpd...")
-    _da = []
-    for t in timeidxs:
-        t0 = t - 24
-        __da = [wrf_getvar(wrf_outs, "wpd", _t) for _t in range(t0, t)]
-        ts = pd.to_datetime(__da[-1].time.values) + timedelta(hours=1)
-        __da = xr.concat(__da, "time").sum("time")
-        __da = __da.assign_coords(time=ts)
-        _da.append(__da)
+    _da = [wrf_getvar(wrf_outs, "wpd", t) for t in range(hr_ds[0].shape[1])]
     _da = xr.concat(_da, "time")
+    _da = _da.transpose("key_0", "time", ...)
     _da = _da.drop(["level", "wspd_wdir"])
-    ds.append(_da)
+    hr_ds.append(_da)
     # endregion wpd
 
     # region ppv
     print("Processing ppv...")
-    _da = []
-    for t in timeidxs:
-        t0 = t - 24
-        __da = [wrf_getvar(wrf_outs, "ppv", _t) for _t in range(t0, t)]
-        ts = pd.to_datetime(__da[-1].time.values) + timedelta(hours=1)
-        __da = xr.concat(__da, "time").sum("time")
-        __da = __da.assign_coords(time=ts)
-        _da.append(__da)
-    _da = xr.concat(_da, "time")
-    ds.append(_da)
+    _da = wrf_getvar(wrf_outs, "ppv", None)
+    hr_ds.append(_da)
     # endregion ppv
 
-    ds = xr.merge(ds)
-    ds = ds.assign_coords(
-        west_east=ds.lon[0, :].values,
-        south_north=ds.lat[:, 0].values,
-        time=[pd.to_datetime(dt) - timedelta(days=1) for dt in ds.time.values],
+    hr_ds = xr.merge(hr_ds)
+    hr_ds = hr_ds.assign_coords(
+        west_east=hr_ds.lon[0, :].values,
+        south_north=hr_ds.lat[:, 0].values,
     )
-    ds = ds.drop(["lon", "lat", "xtime"])
-    ds = ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
+    hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
+    hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
+
+    day_ds = []
+
+    _ds = (
+        hr_ds[["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]]
+        .isel(time=dayidxs)
+        .copy()
+    )
+    _ds = _ds.assign_coords(
+        time=[pd.to_datetime(dt) - timedelta(days=1) for dt in _ds.time.values],
+    )
+    day_ds.append(_ds)
+    _ds = hr_ds[["rain", "wpd", "ppv"]].sel(time=hr_ds.time[1:]).copy()
+    _ds = _ds.assign_coords(
+        time=[pd.to_datetime(dt) - timedelta(hours=1) for dt in _ds.time.values],
+    )
+    _ds = _ds.groupby("time.day").sum().rename({"day": "time"})
+    _ds = _ds.assign_coords(
+        time=day_ds[0].time.values,
+    )
+    day_ds.append(_ds)
+    day_ds = xr.merge(day_ds)
 
     _out_dir = out_dir / "maps"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating maps...")
-    plot_maps(ds, _out_dir)
+    plot_maps(day_ds, _out_dir)
     _out_dir = out_dir / "web/maps"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating web maps...")
-    plot_web_maps(ds, _out_dir)
+    plot_web_maps(day_ds, _out_dir)
     _out_dir = out_dir / "web/json"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating summary...")
-    extract_points(ds, _out_dir)
+    extract_points({"hr": hr_ds, "day": day_ds}, _out_dir)
 
 
 if __name__ == "__main__":
