@@ -52,6 +52,7 @@ def plot_maps(ds, out_dir):
                     transform=plot_proj,
                     levels=range(28, 32),
                     colors="#ffffff",
+                    add_labels=False,
                     linewidths=0.5,
                 )
                 ax.clabel(p, p.levels, inline=True, fontsize=6)
@@ -68,7 +69,8 @@ def plot_maps(ds, out_dir):
                 _v = ds["v_850hPa"].isel(time=t).mean("ens")
                 u = _u[::20, ::20]
                 v = _v[::20, ::20]
-                wspd = (u.values ** 2 + v.values ** 2) ** 0.5
+                da = u.copy()
+                da.values = (u.values ** 2 + v.values ** 2) ** 0.5
                 cmap = ListedColormap(colors)
                 norm = BoundaryNorm(levels, cmap.N, extend="both")
                 p = plt.barbs(
@@ -76,7 +78,7 @@ def plot_maps(ds, out_dir):
                     u.lat.values,
                     u.values,
                     v.values,
-                    wspd,
+                    da.values,
                     length=6,
                     cmap=cmap,
                     norm=norm,
