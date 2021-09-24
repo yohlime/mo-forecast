@@ -1,55 +1,46 @@
 import numpy as np
-from netCDF4 import Dataset
 from wrf import getvar, interplevel
-from salem import open_xr_dataset
 import metpy.calc as mpcalc
 from metpy.units import units
 
 
-def wrf_getproj(wrf_out):
-    _ds = open_xr_dataset(wrf_out)
-    proj = _ds.salem.cartopy()
-    _ds.close()
-    return proj
-
-
-def wrf_getvar(wrf_out, var_name, timeidx=0, levels=None, interp=None):
+def wrf_getvar(wrfin, varname, timeidx=0, levels=None, interp=None):
     """Wrapper around wrf-python's getvar
 
     Args:
-        wrf_out (str): wrf_out path
-        var_name (str): The variable name
+        wrfin (`netCDF4.Dataset`, `Nio.NioFile`, or an iterable): WRF-ARW NetCDF
+            data as a `netCDF4.Dataset`, `Nio.NioFile` or an iterable sequence of
+            the aforementioned types.
+        varname (str): The variable name
         timeidx (int, optional): The desired time index. Defaults to 0.
-        levels (List[float] or numpy.ndarray, optional): Desired levels.
+        levels (List[float] or `numpy.ndarray`, optional): Desired levels.
             Defaults to None.
         interp (str, optional): Type of vertical interpolation. Defaults to None.
 
     Returns:
-        xarray.DataArray
+        If xarray is enabled and the meta parameter is True, then the result will be a
+        `xarray.DataArray` object. Otherwise, the result will be a `numpy.ndarray`
+        object with no metadata.
     """
-    if isinstance(wrf_out, list):
-        wrfin = {f"ens{i}": Dataset(w) for i, w in enumerate(wrf_out)}
-        ds = open_xr_dataset(wrf_out[0])
-    else:
-        wrfin = Dataset(wrf_out)
-        ds = open_xr_dataset(wrf_out)
-
-    if var_name == "prcp":
+    if varname == "prcp":
         da = getvar(wrfin, "RAINC", timeidx) + getvar(wrfin, "RAINNC", timeidx).values
         da.name = "prcp"
-    elif var_name == "hi":
+    elif varname == "hi":
         t = getvar(wrfin, "T2", timeidx) - 273.15
         rh = getvar(wrfin, "rh2", timeidx)
         da = heat_index(t, rh)
-        da.name = "HI"
-    elif var_name == "wpd":
-        # wspd = getvar(wrfin, "wspd_wdir")[0, 0, :]
-        wspd = wrf_getvar(
-            wrf_out, "wspd_wdir", timeidx, levels=80, interp="height_agl"
-        )[0, :]
+        da.name = "hi"
+    elif varname == "wpd":
+        # wspd = wrf_getvar(wrfin, "wspd_wdir", timeidx, levels=80, interp="height_agl")[
+        #     0, :
+        # ]
+        u = wrf_getvar(wrfin, "ua", timeidx, levels=80, interp="height_agl")
+        v = wrf_getvar(wrfin, "va", timeidx, levels=80, interp="height_agl")
+        wspd = u.copy()
+        wspd.values = (u.values ** 2 + v.values ** 2) ** 0.5
         da = wind_power_density(wspd)
         da.name = "wpd"
-    elif var_name == "ppv":
+    elif varname == "ppv":
         swddni = getvar(wrfin, "SWDDNI", timeidx)
         coszen = getvar(wrfin, "COSZEN", timeidx)
         swddif = getvar(wrfin, "SWDDIF", timeidx)
@@ -57,29 +48,16 @@ def wrf_getvar(wrf_out, var_name, timeidx=0, levels=None, interp=None):
         da = pv_power_potential(swddni, coszen, swddif, t)
         da.name = "ppv"
     else:
-        da = getvar(wrfin, var_name, timeidx)
+        da = getvar(wrfin, varname, timeidx)
 
     if levels is not None:
         if interp in ["pressure", "height", "height_agl"]:
             vert = getvar(wrfin, interp, timeidx)
         da = interplevel(da, vert, levels)
 
-    if isinstance(wrf_out, list):
-        wrfin = {f"ens{i}": Dataset(w) for i, w in enumerate(wrf_out)}
-        for k in wrfin.keys():
-            wrfin[k].close()
-    else:
-        wrfin.close()
-
     tr = {"Time": "time", "XLAT": "lat", "XLONG": "lon", "XTIME": "xtime"}
     tr = {k: tr[k] for k in tr.keys() if k in da.coords}
     da = da.rename(tr)
-    # add cartesian coords
-    da = da.assign_coords(
-        {"west_east": ds.salem.grid.x_coord, "south_north": ds.salem.grid.y_coord}
-    )
-    # add pyproj string
-    da.attrs["pyproj_srs"] = ds.salem.grid.proj.srs
     return da
 
 
