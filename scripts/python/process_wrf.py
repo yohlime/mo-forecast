@@ -3,7 +3,6 @@ import sys
 import getopt
 from pathlib import Path
 from datetime import timedelta
-from itertools import count
 import pandas as pd
 import xarray as xr
 import pytz
@@ -13,6 +12,7 @@ from wrf import omp_set_num_threads, omp_get_max_threads
 from __const__ import wrf_dirs, wrf_forecast_days
 from __helper__ import wrf_getvar
 from plot_maps import plot_maps
+from plot_ts import plot_timeseries
 from plot_web_maps import plot_web_maps
 from extract_points import extract_points
 
@@ -42,7 +42,7 @@ def main(wrf_outs, out_dir):
     _da = xr.concat(__da, "time")
     _da = _da.transpose("key_0", "time", ...)
     _da.name = "rain"
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion rain
 
     # region temp
@@ -50,7 +50,7 @@ def main(wrf_outs, out_dir):
     _da = wrf_getvar(wrf_outs, "T2", None)
     _da = _da - 273.15
     _da.name = "temp"
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion temp
 
     # region tsk
@@ -58,21 +58,21 @@ def main(wrf_outs, out_dir):
     _da = wrf_getvar(wrf_outs, "TSK", None)
     _da = _da - 273.15
     _da.name = "tsk"
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion tsk
 
     # region hi
     print("Processing heat index...")
     _da = wrf_getvar(wrf_outs, "hi", None)
     _da.name = "hi"
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion hi
 
     # region rh
     print("Processing 2m relative humidity...")
     _da = wrf_getvar(wrf_outs, "rh2", None)
     _da.name = "rh"
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion rh
 
     # region wind
@@ -85,7 +85,7 @@ def main(wrf_outs, out_dir):
     u = u.transpose("key_0", "time", ...)
     u.name = "u_850hPa"
     u = u.drop("level")
-    hr_ds.append(u)
+    hr_ds.append(xr.DataArray(u, attrs={}))
     v = [
         wrf_getvar(wrf_outs, "va", t, levels=850, interp="pressure")
         for t in range(hr_ds[0].shape[1])
@@ -94,7 +94,7 @@ def main(wrf_outs, out_dir):
     v = v.transpose("key_0", "time", ...)
     v.name = "v_850hPa"
     v = v.drop("level")
-    hr_ds.append(v)
+    hr_ds.append(xr.DataArray(v, attrs={}))
     # endregion wind
 
     # region wpd
@@ -103,19 +103,20 @@ def main(wrf_outs, out_dir):
     _da = xr.concat(_da, "time")
     _da = _da.transpose("key_0", "time", ...)
     _da = _da.drop(["level", "wspd_wdir"])
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion wpd
 
     # region ppv
     print("Processing ppv...")
     _da = wrf_getvar(wrf_outs, "ppv", None)
-    hr_ds.append(_da)
+    hr_ds.append(xr.DataArray(_da, attrs={}))
     # endregion ppv
 
     hr_ds = xr.merge(hr_ds)
     hr_ds = hr_ds.assign_coords(
         west_east=hr_ds.lon[0, :].values,
         south_north=hr_ds.lat[:, 0].values,
+        key_0=range(len(wrf_outs)),
     )
     hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
     hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
@@ -146,14 +147,28 @@ def main(wrf_outs, out_dir):
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating maps...")
     plot_maps(day_ds, _out_dir)
+
+    _out_dir = out_dir / "timeseries"
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    print("Creating ts plot...")
+    plot_timeseries(hr_ds, _out_dir)
+
     _out_dir = out_dir / "web/maps"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating web maps...")
     plot_web_maps(day_ds, _out_dir)
+
     _out_dir = out_dir / "web/json"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating summary...")
     extract_points({"hr": hr_ds, "day": day_ds}, _out_dir)
+
+    print("Saving nc...")
+    init_dt = pd.to_datetime(hr_ds.time.values[0])
+    init_dt_str = init_dt.strftime("%Y-%m-%d_%H")
+    out_file = out_dir / f"nc/wrf_{init_dt_str}.nc"
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+    hr_ds.to_netcdf(out_file, unlimited_dims=["time"])
 
 
 if __name__ == "__main__":
