@@ -1,8 +1,10 @@
 import os
 import sys
 import getopt
+from tqdm import tqdm
 from pathlib import Path
 from datetime import timedelta
+from netCDF4 import Dataset
 import pandas as pd
 import xarray as xr
 import pytz
@@ -22,107 +24,75 @@ print(f"Using {omp_get_max_threads()} threads...")
 
 tz = pytz.timezone("Asia/Manila")
 
+vars = {
+    "rain": {"varname": "prcp"},
+    "temp": {"varname": "T2"},
+    "tsk": {"varname": "TSK"},
+    "hi": {"varname": "hi"},
+    "rh": {"varname": "rh2"},
+    "u_850hPa": {"varname": "ua", "levels": 850, "interp": "pressure"},
+    "v_850hPa": {"varname": "va", "levels": 850, "interp": "pressure"},
+    "wpd": {"varname": "wpd"},
+    "ppv": {"varname": "ppv"},
+}
 
-def main(wrf_outs, out_dir):
+
+def main(wrfin, out_dir):
     dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
+    nt = wrf_forecast_days * 24 + 1
 
+    # region create hourly dataset
     hr_ds = []
 
-    # region rain
-    print("Processing rain...")
-    _da = wrf_getvar(wrf_outs, "prcp", None)
-    __da = []
-    for i in range(_da.time.shape[0]):
-        if i > 0:
-            d = _da.isel(time=i)
-            d.values = d.values - _da.isel(time=(i - 1)).values
-            __da.append(d)
+    # process needed variables
+    for var_name, var_info in tqdm(vars.items(), total=len(vars)):
+        print(f"Processing {var_name}...")
+        if var_name == "rain":
+            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
+            # create step-wise values
+            __da = []
+            for i in range(nt):
+                if i > 0:
+                    d = _da.isel(time=i)
+                    d.values = d.values - _da.isel(time=(i - 1)).values
+                    __da.append(d)
+                else:
+                    __da.append(_da.isel(time=i))
+            _da = __da.copy()
+        elif var_name in ["u_850hPa", "v_850hPa"]:
+            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
+        elif var_name in ["wpd"]:
+            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
         else:
-            __da.append(_da.isel(time=i))
-    _da = xr.concat(__da, "time")
-    _da = _da.transpose("key_0", "time", ...)
-    _da.name = "rain"
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion rain
+            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
 
-    # region temp
-    print("Processing 2m temperature...")
-    _da = wrf_getvar(wrf_outs, "T2", None)
-    _da = _da - 273.15
-    _da.name = "temp"
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion temp
+        if var_name in ["temp", "tsk"]:
+            _da = _da - 273.15  # K to degC
 
-    # region tsk
-    print("Processing tsk...")
-    _da = wrf_getvar(wrf_outs, "TSK", None)
-    _da = _da - 273.15
-    _da.name = "tsk"
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion tsk
+        if var_name in ["rain", "u_850hPa", "v_850hPa", "wpd"]:
+            _da = xr.concat(_da, "time")
+            _da = _da.transpose("key_0", "time", ...)
 
-    # region hi
-    print("Processing heat index...")
-    _da = wrf_getvar(wrf_outs, "hi", None)
-    _da.name = "hi"
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion hi
+        if var_name in ["u_850hPa", "v_850hPa", "wpd"]:
+            _da = _da.drop("level")
 
-    # region rh
-    print("Processing 2m relative humidity...")
-    _da = wrf_getvar(wrf_outs, "rh2", None)
-    _da.name = "rh"
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion rh
+        _da.name = var_name
+        hr_ds.append(xr.DataArray(_da, attrs={}))
 
-    # region wind
-    print("Processing wind...")
-    u = [
-        wrf_getvar(wrf_outs, "ua", t, levels=850, interp="pressure")
-        for t in range(hr_ds[0].shape[1])
-    ]
-    u = xr.concat(u, "time")
-    u = u.transpose("key_0", "time", ...)
-    u.name = "u_850hPa"
-    u = u.drop("level")
-    hr_ds.append(xr.DataArray(u, attrs={}))
-    v = [
-        wrf_getvar(wrf_outs, "va", t, levels=850, interp="pressure")
-        for t in range(hr_ds[0].shape[1])
-    ]
-    v = xr.concat(v, "time")
-    v = v.transpose("key_0", "time", ...)
-    v.name = "v_850hPa"
-    v = v.drop("level")
-    hr_ds.append(xr.DataArray(v, attrs={}))
-    # endregion wind
-
-    # region wpd
-    print("Processing wpd...")
-    _da = [wrf_getvar(wrf_outs, "wpd", t) for t in range(hr_ds[0].shape[1])]
-    _da = xr.concat(_da, "time")
-    _da = _da.transpose("key_0", "time", ...)
-    _da = _da.drop(["level", "wspd_wdir"])
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion wpd
-
-    # region ppv
-    print("Processing ppv...")
-    _da = wrf_getvar(wrf_outs, "ppv", None)
-    hr_ds.append(xr.DataArray(_da, attrs={}))
-    # endregion ppv
-
+    # merge to one xarrray.Dataset
+    # clean coordinates/dims
     hr_ds = xr.merge(hr_ds)
     hr_ds = hr_ds.assign_coords(
         west_east=hr_ds.lon[0, :].values,
         south_north=hr_ds.lat[:, 0].values,
-        key_0=range(len(wrf_outs)),
+        key_0=range(len(wrfin.keys())),
     )
     hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
     hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
+    # endregion create hourly dataset
 
+    # region create daily dataset
     day_ds = []
-
     _ds = (
         hr_ds[["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]]
         .isel(time=dayidxs)
@@ -142,7 +112,9 @@ def main(wrf_outs, out_dir):
     )
     day_ds.append(_ds)
     day_ds = xr.merge(day_ds)
+    # endregion create daily dataset
 
+    # region output
     _out_dir = out_dir / "maps"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating maps...")
@@ -169,6 +141,7 @@ def main(wrf_outs, out_dir):
     out_file = out_dir / f"nc/wrf_{init_dt_str}.nc"
     out_file.parent.mkdir(parents=True, exist_ok=True)
     hr_ds.to_netcdf(out_file, unlimited_dims=["time"])
+    # endregion output
 
 
 if __name__ == "__main__":
@@ -188,5 +161,5 @@ if __name__ == "__main__":
         elif opt in ("-o", "--odir"):
             out_dir = Path(arg)
             out_dir.mkdir(parents=True, exist_ok=True)
-    wrf_outs = [d / wrf_out for d in wrf_dirs]
-    main(wrf_outs, out_dir)
+    wrfin = {f"ens{i}": Dataset(d / wrf_out) for i, d in enumerate(wrf_dirs)}
+    main(wrfin, out_dir)
