@@ -60,7 +60,7 @@ def plot_timeseries(ds, out_dir):
     axs[0].set_yticks(range(0, 45, y_major_step))
     axs[0].set_yticks(range(0, 45, y_minor_step), minor=True)
     axs[0].tick_params(axis="y", labelsize=24)
-    axs[0].set_ylabel("Rainfall (mm/hr)", size=24, color="blue")
+    axs[0].set_ylabel("Rainfall (mm/hr)", fontsize=24, color="blue")
     axs[0].set_ylim([-0.1, 40])
 
     axs[0].grid(which="major", axis="x", c="gray", ls="dotted")
@@ -137,7 +137,7 @@ def plot_timeseries(ds, out_dir):
     y_max = site_df[["temp", "hi"]].max().max()
     axs[1].set_yticks(range(25, 45, 5))
     axs[1].tick_params(axis="y", labelsize=24)
-    axs[1].set_ylabel("Temp/HI (°C)", size=24, color="red")
+    axs[1].set_ylabel("Temp/HI (°C)", fontsize=24, color="red")
     y_max = site_df[["temp", "hi"]].max().max()
     y_max = round(float(y_max) / 5) * 5
     axs[1].set_ylim([25, y_max])
@@ -169,7 +169,8 @@ def plot_timeseries(ds, out_dir):
     _ax.set_xlabel(None)
     _ax.set_xlim([site_df.index.min() - timedelta(hours=2), site_df.index.max()])
 
-    _ax.set_ylabel("Relative Humidity (%)", size=24, color="green")
+    _ax.tick_params(axis="y", labelsize=24)
+    _ax.set_ylabel("Relative Humidity (%)", fontsize=24, color="green")
     _ax.set_ylim([20, 100])
 
     _ax.legend(loc="lower center", bbox_to_anchor=(0.65, -0.22), fontsize=20, ncol=2)
@@ -205,11 +206,11 @@ def plot_timeseries(ds, out_dir):
         minor=True,
     )
     axs[2].tick_params(axis="x", which="both", labelsize=22, labelrotation=30)
-    axs[2].set_xlabel("Day and Time (PHT)", size=24)
+    axs[2].set_xlabel("Day and Time (PHT)", fontsize=24)
     axs[2].set_xlim([site_df.index.min() - timedelta(hours=2), site_df.index.max()])
 
     axs[2].tick_params(axis="y", labelsize=24)
-    axs[2].set_ylabel("Wind Speed (m/s)", size=24, color="black")
+    axs[2].set_ylabel("Wind Speed (m/s)", fontsize=24, color="black")
     axs[2].set_ylim([0, 20])
 
     axs[2].grid(which="major", axis="x", c="gray", ls="dotted")
@@ -247,7 +248,7 @@ def plot_timeseries(ds, out_dir):
 
     axs[3].set_yticks(range(0, 16, 2))
     axs[3].tick_params(axis="y", labelsize=24)
-    axs[3].set_ylabel("Wind PP (MW)", size=24, color="black")
+    axs[3].set_ylabel("Wind PP (MW)", fontsize=24, color="black")
     y_max = site_df.wpd.max()
     if y_max <= 4:
         y_max = 4
@@ -281,12 +282,12 @@ def plot_timeseries(ds, out_dir):
         minor=True,
     )
     axs[4].tick_params(axis="x", which="both", labelsize=22, labelrotation=30)
-    axs[4].set_xlabel("Day and Time (PHT)", size=24)
+    axs[4].set_xlabel("Day and Time (PHT)", fontsize=24)
     axs[4].set_xlim([-2, 121])
 
     axs[4].set_yticks(np.linspace(0, 2, 5))
     axs[4].tick_params(axis="y", labelsize=24)
-    axs[4].set_ylabel("Solar PP (MW)", size=24, color="black")
+    axs[4].set_ylabel("Solar PP (MW)", fontsize=24, color="black")
     axs[4].set_ylim([0, 2])
 
     axs[4].grid(which="major", c="gray", ls="dotted")
