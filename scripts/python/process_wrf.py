@@ -120,7 +120,7 @@ def main(wrfin, out_dir):
     print("Creating maps...")
     plot_maps(day_ds, _out_dir)
 
-    _out_dir = out_dir / "timeseries"
+    _out_dir = out_dir / "timeseries/img"
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating ts plot...")
     plot_timeseries(hr_ds, _out_dir)
