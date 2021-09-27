@@ -18,7 +18,7 @@ echo "---------------------------------"
 # -------------------------------------------- #
 
 cd $SCRIPT_DIR/python
-$PYTHONCONDA process_wrf.py -i ${WRF_OUT_FILE} -o ${OUTDIR}/.test
+$PYTHONCONDA process_wrf.py -i ${WRF_OUT_FILE} -o ${OUTDIR}
 
 echo "---------------------------------"
 echo " Python postprocessing finished! "

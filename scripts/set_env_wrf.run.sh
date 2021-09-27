@@ -9,6 +9,8 @@ export I_MPI_FC=ifort
 export I_MPI_F77=ifort
 export I_MPI_F90=ifort
 
+export OMP_NUM_THREADS=$SLURM_WRF_CPUS_PER_TASK
+
 spack env deactivate
 spack env activate intel
 spack load netcdf-fortran %intel

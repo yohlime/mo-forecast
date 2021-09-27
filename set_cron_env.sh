@@ -12,6 +12,7 @@ export WRF_POSTDIR=${MAINDIR}/model/ARWpost
 export WPS_GFSDIR=${MAINDIR}/model/WPS/GFS
 export WRF_MAINDIR=${MAINDIR}/model
 export WRF_REALDIR=${MAINDIR}/model/WRF
+export WRF_ENS=${MAINDIR}/model/ENSEMBLE
 
 export WRFRES=5
 export WRF_FCST_DAYS=5
@@ -19,21 +20,24 @@ export WRF_FCST_DAYS=5
 # export NAMELIST_SUFF=wcr_luzon
 # export NAMELIST_SUFF=mowcr_D1
 export NAMELIST_SUFF=mowcr_solar
+export WPS_NAMELIST_SUFF=mowcr_solar
+export WRF_RUN_NAMES=mowcr_solar_run1:mowcr_solar_run2:mowcr_solar_run3
 
-export SLURM_WPS_NTASKS=12
+export SLURM_WPS_NTASKS=6
 export SLURM_WRF_NTASKS=96
 #export SLURM_WRF_NTASKS=72
 export SLURM_WRF_NTASKS2=96
 export SLURM_PARTITION=dugong
 export SLURM_NUM_NODES=1
 export SLURM_ACCOUNT=rcs
+export SLURM_WRF_CPUS_PER_TASK=1
 
 export OUTDIR=${MAINDIR}/output
 export OUTDIR_LATEST_TIF=${OUTDIR}/tif/latest
 export EWB_TIF=${MAINDIR}/ewb/tif
 export EWB_TRMM_CLIM=${MAINDIR}/ewb/trmm/clim
 
-export CDO=/home/miniconda3/envs/toolbox/bin/cdo
+export CDO=/opt/tools/nc/cdo
 
 export CONDA_TOOLBOX=toolbox
 export CONDA_QGIS=qgis
