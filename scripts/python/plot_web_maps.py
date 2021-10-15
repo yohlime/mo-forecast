@@ -64,7 +64,7 @@ def plot_web_maps(ds, out_dir):
                     da = _da.sum("ens")
                 else:
                     da = _da.mean("ens")
-                da = da.salem.roi(roi=land_mask.z, crs=plot_proj)
+                da = da.salem.roi(roi=land_mask.mask, crs=plot_proj)
 
                 fig = plt.figure(figsize=(4, 5), constrained_layout=True)
                 ax = plt.axes(projection=plot_proj)
