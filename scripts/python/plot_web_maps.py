@@ -1,19 +1,8 @@
 import pandas as pd
-from salem import open_xr_dataset
-from cartopy import crs as ccrs
-import pytz
 
 import matplotlib.pyplot as plt
 
-from __const__ import plot_vars_web, script_dir
-
-# ph_gdf = read_shapefile(script_dir / "shp/phil/bounds/bounds.shp", cached=True)
-# ph_gdf = ph_gdf.set_crs("epsg:4326")
-
-land_mask = open_xr_dataset(script_dir / "python/input/nc/ph_mask.nc")
-
-tz = pytz.timezone("Asia/Manila")
-plot_proj = ccrs.PlateCarree()
+from __const__ import tz, plot_proj, plot_vars_web, ph_land_mask as land_mask
 
 xlim = (116, 128)
 ylim = (5, 20)

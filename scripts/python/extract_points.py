@@ -1,12 +1,10 @@
 from pathlib import Path
 import pandas as pd
 import xarray as xr
-import pytz
 
-from __const__ import script_dir
+from __const__ import tz, script_dir
 
-site_df = pd.read_csv(script_dir / "python/input/csv/cities.csv")
-tz = pytz.timezone("Asia/Manila")
+site_df = pd.read_csv(script_dir / "python/resources/csv/cities.csv")
 
 
 def rain_chance_str(val):

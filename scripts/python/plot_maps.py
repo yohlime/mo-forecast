@@ -1,22 +1,21 @@
-import pandas as pd
-from salem import open_xr_dataset
-from cartopy import crs as ccrs
-from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 from datetime import timedelta
-import pytz
+import pandas as pd
+
+from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
-from __const__ import wrf_forecast_days, plot_vars, script_dir
-
-land_mask = open_xr_dataset(script_dir / "python/input/nc/mask.nc")
-
-tz = pytz.timezone("Asia/Manila")
+from __const__ import (
+    tz,
+    plot_proj,
+    wrf_forecast_days,
+    plot_vars,
+    domain_land_mask as land_mask,
+)
 
 lon_formatter = LongitudeFormatter(zero_direction_label=True, degree_symbol="")
 lat_formatter = LatitudeFormatter(degree_symbol="")
-plot_proj = ccrs.PlateCarree()
 
 lon_labels = range(120, 130, 5)
 lat_labels = range(5, 25, 5)
@@ -46,7 +45,7 @@ def plot_maps(ds, out_dir):
                 da = ds[var_name].isel(time=t).mean("ens")
             elif var_name == "temp":
                 da = ds["tsk"].isel(time=t).mean("ens")
-                da = da.salem.roi(roi=land_mask.z.isnull())
+                da = da.salem.roi(roi=land_mask.mask.isnull())
                 p = da.plot.contour(
                     ax=ax,
                     transform=plot_proj,
@@ -57,11 +56,11 @@ def plot_maps(ds, out_dir):
                 )
                 ax.clabel(p, p.levels, inline=True, fontsize=6)
                 _da = ds[var_name].isel(time=t).mean("ens")
-                _da = _da.salem.roi(roi=land_mask.z)
+                _da = _da.salem.roi(roi=land_mask.mask)
                 da.values = da.fillna(0).values + _da.fillna(0).values
             elif var_name == "hi":
                 da = ds[var_name].isel(time=t).mean("ens")
-                da = da.salem.roi(roi=land_mask.z, crs=plot_proj)
+                da = da.salem.roi(roi=land_mask.mask, crs=plot_proj)
             elif var_name == "rh":
                 da = ds[var_name].isel(time=t).mean("ens")
             elif var_name == "wind":
@@ -90,7 +89,7 @@ def plot_maps(ds, out_dir):
                 if var_name == "wpd":
                     text_color = "blue"
                 elif var_name == "ppv":
-                    da = da.salem.roi(roi=land_mask.z)
+                    da = da.salem.roi(roi=land_mask.mask)
                     text_color = "darkorange"
             else:
                 continue
@@ -105,7 +104,7 @@ def plot_maps(ds, out_dir):
             fig.suptitle(plt_title, fontsize=14)
 
             if var_name in ["wpd", "ppv"]:
-                tot_wpd = da.salem.roi(roi=land_mask.z).sum().values / 1000
+                tot_wpd = da.salem.roi(roi=land_mask.mask).sum().values / 1000
                 tot_wpd = int(tot_wpd.round())
                 ax.set_title(
                     f"Total$^{{*}}$: {tot_wpd} GW", fontsize=24, color=text_color

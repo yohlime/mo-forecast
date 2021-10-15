@@ -1,11 +1,10 @@
 from datetime import timedelta
 import numpy as np
 import pandas as pd
-import pytz
 
 import matplotlib.pyplot as plt
 
-tz = pytz.timezone("Asia/Manila")
+from __const__ import tz
 
 # MOIP
 

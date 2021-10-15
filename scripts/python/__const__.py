@@ -1,16 +1,48 @@
 import os
+import warnings
+import pytz
 from pathlib import Path
+from salem import open_xr_dataset
+from cartopy import crs as ccrs
+
 import seaborn as sns
 
-wrf_forecast_days = int(os.getenv("WRF_FCST_DAYS"))
-wrf_maindir = Path(os.getenv("WRF_REALDIR"))
-wrf_run_names = os.getenv("WRF_RUN_NAMES").split(":")
+tz = pytz.timezone("Asia/Manila")
+plot_proj = ccrs.PlateCarree()
+
+wrf_maindir = os.getenv("WRF_REALDIR")
+if wrf_maindir is None:
+    raise NotADirectoryError("WRF_REALDIR not set")
+else:
+    wrf_maindir = Path(wrf_maindir)
+
+script_dir = os.getenv("SCRIPT_DIR")
+if script_dir is None:
+    script_dir = wrf_maindir / "scripts"
+    warnings.warn(f"SCRIPT_DIR not set, script_dir set to '{script_dir}'")
+else:
+    script_dir = Path(script_dir)
+
+wrf_forecast_days = os.getenv("WRF_FCST_DAYS")
+if wrf_forecast_days is None:
+    wrf_forecast_days = 3
+    warnings.warn(
+        f"WRF_FCST_DAYS not set, wrf_forecast_days set to '{wrf_forecast_days}'"
+    )
+else:
+    wrf_forecast_days = int(wrf_forecast_days)
+
+wrf_run_names = os.getenv("WRF_RUN_NAMES")
+if wrf_run_names is None:
+    wrf_run_names = "run1:run2"
+    warnings.warn(f"WRF_RUN_NAMES not set, wrf_run_names set to '{wrf_run_names}'")
+wrf_run_names = wrf_run_names.split(":")
 wrf_dirs = [wrf_maindir / wrf_run_name for wrf_run_name in wrf_run_names]
 
-script_dir = Path(os.getenv("SCRIPT_DIR"))
-
-
 num_ens_member = len(wrf_run_names)
+
+domain_land_mask = open_xr_dataset(script_dir / "python/resources/nc/mask.nc")
+ph_land_mask = open_xr_dataset(script_dir / "python/resources/nc/ph_mask.nc")
 
 plot_vars = {
     "rain": {
