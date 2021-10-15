@@ -1,1 +1,0 @@
-/home/modelman/forecast/scripts/grads/mask.nc

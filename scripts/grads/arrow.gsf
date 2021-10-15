@@ -1,9 +1,0 @@
-function arrow(x,y,len,scale)
-'set line 1 1 6'
-'draw line 'x-len/2.' 'y' 'x+len/2.' 'y
-'draw line 'x+len/2.-0.05' 'y+0.025' 'x+len/2.' 'y
-'draw line 'x+len/2.-0.05' 'y-0.025' 'x+len/2.' 'y
-'set string 1 c'
-'set strsiz 0.15'
-'draw string 'x' 'y-0.15' 'scale
-return
