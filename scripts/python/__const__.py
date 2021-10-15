@@ -1,12 +1,13 @@
+import os
 from pathlib import Path
 import seaborn as sns
 
-wrf_forecast_days = 5
-wrf_dirs = [
-    Path(f"/home/modelman/forecast/model/WRF/mowcr_solar_run{i}") for i in range(1, 4)
-]
+wrf_forecast_days = int(os.getenv("WRF_FCST_DAYS"))
+wrf_maindir = Path(os.getenv("WRF_REALDIR"))
+wrf_run_names = os.getenv("WRF_RUN_NAMES").split(":")
+wrf_dirs = [wrf_maindir / wrf_run_name for wrf_run_name in wrf_run_names]
 
-script_dir = Path("/home/modelman/forecast/scripts")
+script_dir = Path(os.getenv("SCRIPT_DIR"))
 
 plot_vars = {
     "rain": {
