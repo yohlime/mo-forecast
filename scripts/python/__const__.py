@@ -9,6 +9,9 @@ wrf_dirs = [wrf_maindir / wrf_run_name for wrf_run_name in wrf_run_names]
 
 script_dir = Path(os.getenv("SCRIPT_DIR"))
 
+
+num_ens_member = len(wrf_run_names)
+
 plot_vars = {
     "rain": {
         "title": "24-Hr Total Rainfall [mm]",
@@ -138,14 +141,15 @@ plot_vars_web = {
         ),
     },
     "rainchance": {
-        "levels": [0, 1, 2, 3],
-        "colors": sns.blend_palette(
+        "levels": [i / 3 for i in range(num_ens_member + 1)],
+        "colors": ["#ffffff"]
+        + sns.blend_palette(
             [
                 "#b0e0e6",
                 "#1e90ff",
                 "#000080",
             ],
-            n_colors=3,
+            n_colors=num_ens_member,
         ),
     },
     "wind": {

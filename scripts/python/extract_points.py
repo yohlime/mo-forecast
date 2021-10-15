@@ -10,14 +10,14 @@ tz = pytz.timezone("Asia/Manila")
 
 
 def rain_chance_str(val):
-    if val < 0.35:
-        return "Low"
-    elif val < 0.7:
-        return "Medium"
-    elif val > 0.8:
-        return "High"
-    else:
+    if val == 0:
         return "NoChance"
+    elif val <= 1 / 3:
+        return "Low"
+    elif val <= 2 / 3:
+        return "Medium"
+    else:
+        return "High"
 
 
 def extract_points(ds_dict, out_dir):
@@ -96,9 +96,9 @@ def extract_points(ds_dict, out_dir):
         da = _da.mean("ens")
         da.name = "rain"
         _ds.append(da)
-
-        _da = _da.where(_da <= 0.2, 1)
-        _da = _da.where(_da > 0.2, 0)
+        no_rain = _da <= 0.2
+        _da = _da.where(no_rain, 1)
+        _da = _da.where(~no_rain, 0)
         da = _da.mean("ens")
         da.name = "rainChance"
         _ds.append(da)

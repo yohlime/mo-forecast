@@ -46,9 +46,13 @@ def plot_web_maps(ds, out_dir):
                 no_rain = _da <= 0.2
                 _da = _da.where(no_rain, 1)
                 _da = _da.where(~no_rain, 0)
-                plt_types = ["sum"]
+                plt_types = ["mean"]
             else:
                 continue
+
+            cbar_extend = "both"
+            if var_name == "rainchance":
+                cbar_extend = "min"
 
             tt = (t + 1) * 24
             for plt_type in plt_types:
@@ -71,7 +75,7 @@ def plot_web_maps(ds, out_dir):
                     colors=colors,
                     add_labels=False,
                     add_colorbar=False,
-                    extend="both",
+                    extend=cbar_extend,
                 )
                 plt.axis("off")
                 # ph_gdf.plot(ax=ax, facecolor="none")
