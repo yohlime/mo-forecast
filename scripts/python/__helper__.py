@@ -47,6 +47,12 @@ def wrf_getvar(wrfin, varname, timeidx=0, levels=None, interp=None):
         t = getvar(wrfin, "T2", timeidx) - 273.15
         da = pv_power_potential(swddni, coszen, swddif, t)
         da.name = "ppv"
+    elif varname == "ghi":
+        swddni = getvar(wrfin, "SWDDNI", timeidx)
+        coszen = getvar(wrfin, "COSZEN", timeidx)
+        swddif = getvar(wrfin, "SWDDIF", timeidx)
+        da = global_horizontal_irradiance(swddni, coszen, swddif)
+        da.name = "ghi"
     else:
         da = getvar(wrfin, varname, timeidx)
 
@@ -131,3 +137,20 @@ def pv_power_potential(swddni, coszen, swddif, t):
     spanel = 7200
     # cf = 0.2
     return ppv * spanel / 1000000
+
+
+def global_horizontal_irradiance(swddni, coszen, swddif):
+    """Computes Global Horizontal Irradiance (W m-2)
+
+    Args:
+        swddni (xarray.DataArray): [description]
+        coszen (xarray.DataArray): [description]
+        swddif (xarray.DataArray): [description]
+
+    Returns:
+        xarray.DataArray: [description]
+    """
+
+    ghi = (swddni * coszen.values) + swddif.values
+
+    return ghi

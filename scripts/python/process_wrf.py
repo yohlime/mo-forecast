@@ -17,7 +17,8 @@ from plot_maps import plot_maps
 from plot_ts import plot_timeseries
 from plot_web_maps import plot_web_maps
 from extract_points import extract_points
-
+from extract_acenergy import extract_acenergy
+from plot_ts_acenergy import plot_ts_ace
 
 omp_set_num_threads(int(os.getenv("SLURM_NTASKS", 4)))
 print(f"Using {omp_get_max_threads()} threads...")
@@ -34,6 +35,7 @@ vars = {
     "v_850hPa": {"varname": "va", "levels": 850, "interp": "pressure"},
     "wpd": {"varname": "wpd"},
     "ppv": {"varname": "ppv"},
+    "ghi": {"varname": "ghi"}
 }
 
 
@@ -102,7 +104,7 @@ def main(wrfin, out_dir):
         time=[pd.to_datetime(dt) - timedelta(days=1) for dt in _ds.time.values],
     )
     day_ds.append(_ds)
-    _ds = hr_ds[["rain", "wpd", "ppv"]].sel(time=hr_ds.time[1:]).copy()
+    _ds = hr_ds[["rain", "wpd", "ppv", "ghi"]].sel(time=hr_ds.time[1:]).copy()
     _ds = _ds.assign_coords(
         time=[pd.to_datetime(dt) - timedelta(hours=1) for dt in _ds.time.values],
     )
@@ -134,6 +136,16 @@ def main(wrfin, out_dir):
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating summary...")
     extract_points({"hr": hr_ds, "day": day_ds}, _out_dir)
+
+    _out_dir = out_dir / "acenergy/csv"
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    print("Creating summary for AC Energy solar farms...")
+    extract_acenergy(hr_ds, _out_dir)
+
+    _out_dir = out_dir / "acenergy/img"
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    print("Creating ts plot for AC Energy solar farms...")
+    plot_ts_ace(hr_ds, _out_dir)
 
     print("Saving nc...")
     init_dt = pd.to_datetime(hr_ds.time.values[0])
