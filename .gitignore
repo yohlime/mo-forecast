@@ -164,12 +164,17 @@ Thumbs.db
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 
-.tmp/
+/.vscode/
+
+/.tmp/
 input
 output
 model
 **/.bak
-scripts/grads/test/
-scripts/grads/extract/
-scripts/heat_index/climatology/
-scripts/timeseries/csv/
+
+/scripts/*
+!/scripts/python
+
+/climatology/
+/validation/
+/acenergy/

@@ -35,12 +35,11 @@ vars = {
     "v_850hPa": {"varname": "va", "levels": 850, "interp": "pressure"},
     "wpd": {"varname": "wpd"},
     "ppv": {"varname": "ppv"},
-    "ghi": {"varname": "ghi"}
+    "ghi": {"varname": "ghi"},
 }
 
 
 def main(wrfin, out_dir):
-    dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
     nt = wrf_forecast_days * 24 + 1
 
     # region create hourly dataset
@@ -94,6 +93,7 @@ def main(wrfin, out_dir):
     # endregion create hourly dataset
 
     # region create daily dataset
+    dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
     day_ds = []
     _ds = (
         hr_ds[["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]]
@@ -104,15 +104,21 @@ def main(wrfin, out_dir):
         time=[pd.to_datetime(dt) - timedelta(days=1) for dt in _ds.time.values],
     )
     day_ds.append(_ds)
+
+    init_dt = pd.to_datetime(hr_ds.time.values[0])
     _ds = hr_ds[["rain", "wpd", "ppv", "ghi"]].sel(time=hr_ds.time[1:]).copy()
     _ds = _ds.assign_coords(
-        time=[pd.to_datetime(dt) - timedelta(hours=1) for dt in _ds.time.values],
+        time=[
+            pd.to_datetime(dt) - timedelta(hours=init_dt.hour + 1)
+            for dt in _ds.time.values
+        ],
     )
     _ds = _ds.groupby("time.day").sum().rename({"day": "time"})
     _ds = _ds.assign_coords(
         time=day_ds[0].time.values,
     )
     day_ds.append(_ds)
+
     day_ds = xr.merge(day_ds)
     # endregion create daily dataset
 
