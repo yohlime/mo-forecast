@@ -133,13 +133,14 @@ def plot_timeseries(ds, out_dir):
     axs[1].set_xlabel(None)
     axs[1].set_xlim([site_df.index.min() - timedelta(hours=2), site_df.index.max()])
 
-    y_max = site_df[["temp", "hi"]].max().max()
     axs[1].set_yticks(range(25, 45, 5))
     axs[1].tick_params(axis="y", labelsize=24)
     axs[1].set_ylabel("Temp/HI (°C)", fontsize=24, color="red")
+    y_min = site_df[["temp", "hi"]].min().min()
+    y_min = np.floor(y_min / 5.0) * 5
     y_max = site_df[["temp", "hi"]].max().max()
-    y_max = round(float(y_max) / 5) * 5
-    axs[1].set_ylim([25, y_max])
+    y_max = np.ceil(y_max / 5.0) * 5
+    axs[1].set_ylim([y_min, y_max])
 
     axs[1].grid(which="major", c="gray", ls="dotted")
 
