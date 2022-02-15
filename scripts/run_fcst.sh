@@ -1,23 +1,44 @@
 #!/bin/bash
 
-DOWNLOAD_INPUT=true
-UPLOAD_OUTPUT=true
-POST_PROCESS=true
+#################### CONSTANTS ####################
+DOWNLOAD_INPUT=1
+UPLOAD_OUTPUT=1
+POST_PROCESS=1
+###################################################
 
-while [ True ]; do
-if [ "$1" = "--no-download"]; then
-    DOWNLOAD_INPUT=false
-    shift 1
-elif [ "$1" = "--no-upload"]; then
-    UPLOAD_OUTPUT=false
-    shift 1
-elif [ "$1" = "--no-post-proc"]; then
-    POST_PROCESS=false
-    shift 1
-else
-    break
-fi
+#################### FUNCTIONS ####################
+function show_usage (){
+  printf "Usage: $0 [options [parameters]]\n"
+  printf "\n"
+  printf "Options:\n"
+  printf " --no-download, Do not download WRF inputs (GFS, etc...)\n"
+  printf " --no-upload, Do not upload outputs\n"
+  printf " --no-post-proc, No post processing\n"
+  printf " -h|--help, Print help\n"
+
+  return 0
+}
+###################################################
+
+################### PROCESS ARGS ###################
+while [ ! -z "$1" ]; do
+  case "$1" in
+    --no-download)
+      DOWNLOAD_INPUT=0
+      ;;
+    --no-upload)
+      UPLOAD_OUTPUT=0
+      ;;
+    --no-post-proc)
+      POST_PROCESS=0
+      ;;
+    *)
+      show_usage
+      ;;
+  esac
+  shift
 done
+###################################################
 
 echo "------------------"
 echo " Starting WRF Forecast "
@@ -27,7 +48,7 @@ source $SCRIPT_DIR/set_date_vars.sh
 
 mkdir -p $GFSDIR
 
-if [ "$DOWNLOAD_INPUT" = true ]; then
+if [ $DOWNLOAD_INPUT -eq 1 ]; then
   # download GFS
   source $SCRIPT_DIR/download_gfs.aria2.sh
 fi
@@ -57,7 +78,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
     done
   done <<< "$WRF_RUN_NAMES"
 
-  if [ "$POST_PROCESS" = true ]; then
+  if [ $POST_PROCESS -eq 1 ]; then
     # Post processing
 
     ### Python Post processing
@@ -65,7 +86,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
     prev_jid=$(sbatch $slurm_opts $SCRIPT_DIR/postproc_python.sh)
     prev_jid=$(echo $prev_jid | tr -dc '0-9')
 
-    if [ "$UPLOAD_OUTPUT" = true ]; then
+    if [ $UPLOAD_OUTPUT -eq 1 ]; then
       ### Web Upload
       slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J web-upload-$FCST_YYYYMMDD$FCST_ZZ -o $MAINDIR/output/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log -n 1"
       sbatch $slurm_opts $SCRIPT_DIR/web_upload.sh
