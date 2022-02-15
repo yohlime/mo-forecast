@@ -83,7 +83,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
         "-d afterok:$prev_jid"\
         "-J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"\
         "-o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"\
-        "-n $WRF_NTASKS"|
+        "-n $WRF_NTASKS"\
         "-c $SLURM_WRF_CPUS_PER_TASK"
       prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
 
