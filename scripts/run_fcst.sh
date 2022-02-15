@@ -65,10 +65,10 @@ NDL_FILES=$(ls $GFSDIR/*.grb | wc -l)
 if [ $NDL_FILES -eq $NUM_FILES ]; then
 
   # WPS
-  slurm_opts=$SLURM_OPTS0\
-    "-J wps-$FCST_YYYYMMDD$FCST_ZZ"\
-    "-o $WRF_MAINDIR/WPS/wps_$FCST_YYYYMMDD$FCST_ZZ.out"\
-    "-n $SLURM_WPS_NTASKS"
+  slurm_opts="$SLURM_OPTS0"
+  slurm_opts="$slurm_opts -J wps-$FCST_YYYYMMDD$FCST_ZZ"
+  slurm_opts="$slurm_opts -o $WRF_MAINDIR/WPS/wps_$FCST_YYYYMMDD$FCST_ZZ.out"
+  slurm_opts="$slurm_opts -n $SLURM_WPS_NTASKS"
   prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wps.sh")
 
   # WRF
@@ -79,12 +79,12 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
       export NAMELIST_RUN=$run_name
 
       WRF_NTASKS=$SLURM_WRF_NTASKS
-      slurm_opts=$SLURM_OPTS0\
-        "-d afterok:$prev_jid"\
-        "-J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"\
-        "-o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"\
-        "-n $WRF_NTASKS"\
-        "-c $SLURM_WRF_CPUS_PER_TASK"
+      slurm_opts="$SLURM_OPTS0"
+      slurm_opts="$slurm_opts -d afterok:$prev_jid"
+      slurm_opts="$slurm_opts -J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
+      slurm_opts="$slurm_opts -o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
+      slurm_opts="$slurm_opts -n $WRF_NTASKS"
+      slurm_opts="$slurm_opts -c $SLURM_WRF_CPUS_PER_TASK"
       prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
 
       run_idx=$((run_idx+1))
@@ -95,20 +95,20 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
     # Post processing
 
     ### Python Post processing
-    slurm_opts=$SLURM_OPTS0\
-      "-d afterok:$prev_jid"\
-      "-J python-$FCST_YYYYMMDD$FCST_ZZ"\
-      "-o ${OUTDIR}/logs/python/python_$FCST_YYYYMMDD$FCST_ZZ.out"\
-      "-n 12"
+    slurm_opts="$SLURM_OPTS0"
+    slurm_opts="$slurm_opts -d afterok:$prev_jid"
+    slurm_opts="$slurm_opts -J python-$FCST_YYYYMMDD$FCST_ZZ"
+    slurm_opts="$slurm_opts -o ${OUTDIR}/logs/python/python_$FCST_YYYYMMDD$FCST_ZZ.out"
+    slurm_opts="$slurm_opts -n 12"
     prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/postproc_python.sh")
 
     if [ $UPLOAD_OUTPUT -eq 1 ]; then
       ### Web Upload
-      slurm_opts=$SLURM_OPTS0\
-        "-d afterok:$prev_jid"\
-        "-J web-upload-$FCST_YYYYMMDD$FCST_ZZ"\
-        "-o $MAINDIR/output/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log"\
-        "-n 1"
+      slurm_opts=$SLURM_OPTS0
+      slurm_opts="$slurm_opts -d afterok:$prev_jid"
+      slurm_opts="$slurm_opts -J web-upload-$FCST_YYYYMMDD$FCST_ZZ"
+      slurm_opts="$slurm_opts -o $MAINDIR/output/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log"
+      slurm_opts="$slurm_opts -n 1"
       prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/web_upload.sh")
     fi
 
@@ -119,11 +119,11 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
       for run_name in "${RUN_NAMES[@]}"; do
         export NAMELIST_RUN=$run_name
 
-        slurm_opts=$SLURM_OPTS0\
-          "-d afterok:$prev_jid"\
-          "-J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"\
-          "-o $WRF_MAINDIR/ARWpost/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"\
-          "-n 1"
+        slurm_opts=$SLURM_OPTS0
+        slurm_opts="$slurm_opts -d afterok:$prev_jid"
+        slurm_opts="$slurm_opts -J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
+        slurm_opts="$slurm_opts -o $WRF_MAINDIR/ARWpost/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
+        slurm_opts="$slurm_opts -n 1"
         prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_arwpost.sh")
 
         run_idx=$((run_idx+1))
@@ -131,11 +131,11 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
     done <<< "$WRF_RUN_NAMES"
 
     ### ENSEMBLE Post processing
-    slurm_opts=$SLURM_OPTS0\
-      "-d afterok:$prev_jid"\
-      "-J ens-$FCST_YYYYMMDD$FCST_ZZ"\
-      "-o $WRF_MAINDIR/ENSEMBLE/ens_$FCST_YYYYMMDD$FCST_ZZ.out"\
-      "-n 1"
+    slurm_opts=$SLURM_OPTS0
+    slurm_opts="$slurm_opts -d afterok:$prev_jid"
+    slurm_opts="$slurm_opts -J ens-$FCST_YYYYMMDD$FCST_ZZ"
+    slurm_opts="$slurm_opts -o $WRF_MAINDIR/ENSEMBLE/ens_$FCST_YYYYMMDD$FCST_ZZ.out"
+    slurm_opts="$slurm_opts -n 1"
     prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_post_ens.sh")
   fi
 
