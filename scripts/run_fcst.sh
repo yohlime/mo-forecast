@@ -7,7 +7,7 @@ POST_PROCESS=1
 ###################################################
 
 #################### FUNCTIONS ####################
-function show_usage (){
+function show_usage() {
   printf "Usage: $0 [options [parameters]]\n"
   printf "\n"
   printf "Options:\n"
@@ -16,6 +16,12 @@ function show_usage (){
   printf " --no-post-proc, No post processing\n"
   printf " -h|--help, Print help\n"
 
+  return 0
+}
+
+function submit_job() {
+  jid=$(sbatch $1)
+  echo $jid | tr -dc '0-9'
   return 0
 }
 ###################################################
@@ -59,8 +65,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
   # WPS
   slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -J wps-$FCST_YYYYMMDD$FCST_ZZ -o $WRF_MAINDIR/WPS/wps_$FCST_YYYYMMDD$FCST_ZZ.out -n $SLURM_WPS_NTASKS"
-  prev_jid=$(sbatch $slurm_opts $SCRIPT_DIR/run_wps.sh)
-  prev_jid=$(echo $prev_jid | tr -dc '0-9')
+  prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wps.sh")
 
   # WRF
   # schedule multiple slurm WRF jobs based on WRF_RUN_NAMES
@@ -71,8 +76,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
       WRF_NTASKS=$SLURM_WRF_NTASKS
       slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx} -o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out -n $WRF_NTASKS -c $SLURM_WRF_CPUS_PER_TASK"
-      prev_jid=$(sbatch $slurm_opts $SCRIPT_DIR/run_wrf.sh)
-      prev_jid=$(echo $prev_jid | tr -dc '0-9')
+      prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
 
       run_idx=$((run_idx+1))
     done
@@ -83,13 +87,12 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
     ### Python Post processing
     slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J python-$FCST_YYYYMMDD$FCST_ZZ -o ${OUTDIR}/logs/python/python_$FCST_YYYYMMDD$FCST_ZZ.out -n 12"
-    prev_jid=$(sbatch $slurm_opts $SCRIPT_DIR/postproc_python.sh)
-    prev_jid=$(echo $prev_jid | tr -dc '0-9')
+    prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/postproc_python.sh")
 
     if [ $UPLOAD_OUTPUT -eq 1 ]; then
       ### Web Upload
       slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J web-upload-$FCST_YYYYMMDD$FCST_ZZ -o $MAINDIR/output/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log -n 1"
-      sbatch $slurm_opts $SCRIPT_DIR/web_upload.sh
+      prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/web_upload.sh")
     fi
 
     ### ARWpost
@@ -100,16 +103,15 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
         export NAMELIST_RUN=$run_name
 
         slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx} -o $WRF_MAINDIR/ARWpost/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out -n 1"
-        prev_jid=$(sbatch $slurm_opts $SCRIPT_DIR/run_arwpost.sh)
-        prev_jid=$(echo $prev_jid | tr -dc '0-9')
+        prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_arwpost.sh")
 
         run_idx=$((run_idx+1))
       done
     done <<< "$WRF_RUN_NAMES"
 
     ### ENSEMBLE Post processing
-    ens_slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J ens-$FCST_YYYYMMDD$FCST_ZZ -o $WRF_MAINDIR/ENSEMBLE/ens_$FCST_YYYYMMDD$FCST_ZZ.out -n 1"
-    sbatch $ens_slurm_opts $SCRIPT_DIR/run_post_ens.sh
+    slurm_opts="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES -d afterok:$prev_jid -J ens-$FCST_YYYYMMDD$FCST_ZZ -o $WRF_MAINDIR/ENSEMBLE/ens_$FCST_YYYYMMDD$FCST_ZZ.out -n 1"
+    prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_post_ens.sh")
   fi
 
 fi
