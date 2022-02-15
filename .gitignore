@@ -164,17 +164,19 @@ Thumbs.db
 
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 
-/.vscode/
+.vscode/
 
-/.tmp/
+.tmp/
 input
 output
 model
+set_cron_env.sh
 **/.bak
 
-/scripts/*
+scripts/*
 !/scripts/python
 
-/climatology/
-/validation/
-/acenergy/
+climatology/
+validation/
+acenergy/
+ewb/
