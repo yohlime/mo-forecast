@@ -30,6 +30,7 @@ vars = {
     "temp": {"varname": "T2"},
     "tsk": {"varname": "TSK"},
     "hi": {"varname": "hi"},
+    "hix":{"varname": "hi"},
     "rh": {"varname": "rh2"},
     "u_850hPa": {"varname": "ua", "levels": 850, "interp": "pressure"},
     "v_850hPa": {"varname": "va", "levels": 850, "interp": "pressure"},
@@ -95,11 +96,15 @@ def main(wrfin, out_dir):
     # region create daily dataset
     dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
     day_ds = []
-    _ds = (
-        hr_ds[["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]]
-        .isel(time=dayidxs)
-        .copy()
+    init_dt = pd.to_datetime(hr_ds.time.values[0])
+    _ds = hr_ds[["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]].sel(time=hr_ds.time[1:]).copy()
+    _ds = _ds.assign_coords(
+        time=[
+            pd.to_datetime(dt) - timedelta(hours=init_dt.hour + 1)
+            for dt in _ds.time.values
+        ],
     )
+    _ds = _ds.groupby("time.day").mean().rename({"day": "time"})
     _ds = _ds.assign_coords(
         time=[pd.to_datetime(dt) - timedelta(days=1) for dt in _ds.time.values],
     )
@@ -114,6 +119,20 @@ def main(wrfin, out_dir):
         ],
     )
     _ds = _ds.groupby("time.day").sum().rename({"day": "time"})
+    _ds = _ds.assign_coords(
+        time=day_ds[0].time.values,
+    )
+    day_ds.append(_ds)
+
+    init_dt = pd.to_datetime(hr_ds.time.values[0])
+    _ds = hr_ds[["hix"]].sel(time=hr_ds.time[1:]).copy()
+    _ds = _ds.assign_coords(
+        time=[
+            pd.to_datetime(dt) - timedelta(hours=init_dt.hour + 1)
+            for dt in _ds.time.values
+        ],
+    )
+    _ds = _ds.groupby("time.day").max().rename({"day": "time"})
     _ds = _ds.assign_coords(
         time=day_ds[0].time.values,
     )

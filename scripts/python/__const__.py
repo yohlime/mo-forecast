@@ -78,6 +78,14 @@ plot_vars = {
             ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
         ),
     },
+    "hix": {
+        "title": "Maximum Heat Index [°C]",
+        "units": "°C",
+        "levels": [27, 32, 41, 54],
+        "colors": sns.blend_palette(
+            ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
+        ),
+    },
     "rh": {
         "title": "Relative Humidity (2m)[%]",
         "units": "%",

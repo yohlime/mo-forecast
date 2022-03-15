@@ -61,6 +61,9 @@ def plot_maps(ds, out_dir):
             elif var_name == "hi":
                 da = ds[var_name].isel(time=t).mean("ens")
                 da = da.salem.roi(roi=land_mask.mask, crs=plot_proj)
+            elif var_name == "hix":
+                da = ds[var_name].isel(time=t).mean("ens")
+                da = da.salem.roi(roi=land_mask.mask, crs=plot_proj)
             elif var_name == "rh":
                 da = ds[var_name].isel(time=t).mean("ens")
             elif var_name == "wind":
