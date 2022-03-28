@@ -79,7 +79,7 @@ plot_vars = {
         ),
     },
     "hix": {
-        "title": "Maximum Heat Index [°C]",
+        "title": "Daily Maximum Heat Index [°C]",
         "units": "°C",
         "levels": [27, 32, 41, 54],
         "colors": sns.blend_palette(
