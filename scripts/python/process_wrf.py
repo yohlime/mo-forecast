@@ -17,6 +17,7 @@ from plot_maps import plot_maps
 from plot_ts import plot_timeseries
 from plot_web_maps import plot_web_maps
 from extract_points import extract_points
+from plot_hi_gauge import plot_gauge
 from extract_acenergy import extract_acenergy
 from plot_ts_acenergy import plot_ts_ace
 
@@ -157,6 +158,11 @@ def main(wrfin, out_dir):
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating summary...")
     extract_points({"hr": hr_ds, "day": day_ds}, _out_dir)
+
+    _out_dir = out_dir / f"hi_gauge/img/{init_dt.strftime('%Y%m%d%H')}"
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    print("Creating HI gauge plots...")
+    plot_gauge(hr_ds, _out_dir)
 
     _out_dir = out_dir / "acenergy/csv"
     _out_dir.mkdir(parents=True, exist_ok=True)
