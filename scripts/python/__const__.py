@@ -43,10 +43,30 @@ num_ens_member = len(wrf_run_names)
 
 domain_land_mask = open_xr_dataset(script_dir / "python/resources/nc/mask.nc")
 ph_land_mask = open_xr_dataset(script_dir / "python/resources/nc/ph_mask.nc")
+trmm = open_xr_dataset(script_dir / "python/resources/nc/trmm_1998-2015_clim.nc")[
+    "precipitation"
+]
 
 plot_vars = {
     "rain": {
         "title": "24-Hr Total Rainfall [mm]",
+        "units": "mm",
+        "levels": [5, 10, 20, 30, 50, 100, 150, 200, 250],
+        "colors": [
+            "#ffffff",
+            "#0064ff",
+            "#01b4ff",
+            "#32db80",
+            "#9beb4a",
+            "#ffeb00",
+            "#ffb302",
+            "#ff6400",
+            "#eb1e00",
+            "#af0000",
+        ],
+    },
+    "rainx": {
+        "title": "Areas with Potential Extreme Rainfall",
         "units": "mm",
         "levels": [5, 10, 20, 30, 50, 100, 150, 200, 250],
         "colors": [

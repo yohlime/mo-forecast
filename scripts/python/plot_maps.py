@@ -1,4 +1,5 @@
 from datetime import timedelta
+import numpy as np
 import pandas as pd
 
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
@@ -12,6 +13,7 @@ from __const__ import (
     wrf_forecast_days,
     plot_vars,
     domain_land_mask as land_mask,
+    trmm,
 )
 
 lon_formatter = LongitudeFormatter(zero_direction_label=True, degree_symbol="")
@@ -43,6 +45,14 @@ def plot_maps(ds, out_dir):
 
             if var_name == "rain":
                 da = ds[var_name].isel(time=t).mean("ens")
+            elif var_name == "rainx":
+                da = ds["rain"].isel(time=t).mean("ens")
+                trmm2 = trmm.isel(time=da.time.dt.month.values - 1)
+                trmm2.name = da.name
+                trmm2 = trmm2.assign_coords(
+                    time=da.time,
+                )
+                extreme_da = np.divide(da, trmm2) * 100
             elif var_name == "temp":
                 da = ds["tsk"].isel(time=t).mean("ens")
                 da = da.salem.roi(roi=land_mask.mask.isnull())
@@ -122,6 +132,17 @@ def plot_maps(ds, out_dir):
                     add_labels=False,
                     extend="both",
                     cbar_kwargs=dict(shrink=0.5),
+                )
+            if var_name == "rainx":
+                da.where(extreme_da < 100).plot.contourf(
+                    ax=ax,
+                    transform=plot_proj,
+                    levels=levels,
+                    colors="white",
+                    alpha=1,
+                    extend="both",
+                    add_labels=False,
+                    add_colorbar=False,
                 )
             p.colorbar.ax.set_title(f"[{var_info['units']}]", fontsize=10)
             ax.coastlines()
