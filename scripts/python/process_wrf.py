@@ -179,6 +179,12 @@ def main(wrfin, out_dir):
     init_dt_str = init_dt.strftime("%Y-%m-%d_%H")
     out_file = out_dir / f"nc/wrf_{init_dt_str}.nc"
     out_file.parent.mkdir(parents=True, exist_ok=True)
+    hr_ds.lon.attrs["units"] = "degrees_east"
+    hr_ds.lon.attrs["standard_name"] = "longitude"  # Optional
+    hr_ds.lon.attrs["long_name"] = "longitude"
+    hr_ds.lat.attrs["units"] = "degrees_north"
+    hr_ds.lat.attrs["standard_name"] = "latitude"  # Optional
+    hr_ds.lat.attrs["long_name"] = "latitude"
     hr_ds.to_netcdf(out_file, unlimited_dims=["time"])
     # endregion output
 
