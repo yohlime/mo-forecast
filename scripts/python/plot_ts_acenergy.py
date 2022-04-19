@@ -66,10 +66,10 @@ def plot_ts_ace(ds, out_dir):
     axs[0].set_xlabel("Day and Time (PHT)", fontsize=24)
     axs[0].set_xlim([-2, 121])
 
-    axs[0].set_yticks(np.linspace(0, 2000, 5))
+    axs[0].set_yticks(np.linspace(0, 1500, 5))
     axs[0].tick_params(axis="y", labelsize=24)
     axs[0].set_ylabel("GHI (W m-2)", fontsize=24, color="black")
-    axs[0].set_ylim([0, 2000])
+    axs[0].set_ylim([0, 1500])
 
     axs[0].grid(which="major", c="gray", ls="dotted")
 
@@ -107,10 +107,10 @@ def plot_ts_ace(ds, out_dir):
     axs[1].set_xlabel("Day and Time (PHT)", fontsize=24)
     axs[1].set_xlim([-2, 121])
 
-    axs[1].set_yticks(np.linspace(0, 2000, 5))
+    axs[1].set_yticks(np.linspace(0, 1500, 5))
     axs[1].tick_params(axis="y", labelsize=24)
     axs[1].set_ylabel("GHI (W m-2)", fontsize=24, color="black")
-    axs[1].set_ylim([0, 2000])
+    axs[1].set_ylim([0, 1500])
 
     axs[1].grid(which="major", c="gray", ls="dotted")
 
