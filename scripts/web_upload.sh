@@ -33,3 +33,15 @@ scp ${SRCDIR}/web/json/forecast_latest.json panahon.alapaap:~/websites/panahon-p
 echo "-----------------------------"
 echo " Done uploading web files!!! "
 echo "-----------------------------"
+
+echo "--------------------------"
+echo " Uploading files for ACEN  "
+echo "--------------------------"
+
+rclone copy ${SRCDIR}/acenergy/csv/acenergy_SACASOL_${YY2}-${mm2}-${dd2}_${HH2}PHT.csv ecw_acen:/ACEN/csv/
+rclone copy ${SRCDIR}/acenergy/csv/acenergy_SOLARACE1_${YY2}-${mm2}-${dd2}_${HH2}PHT.csv ecw_acen:/ACEN/csv/
+rclone copy ${SRCDIR}/acenergy/img/acenergy-ts_${YY2}-${mm2}-${dd2}_${HH2}PHT.png ecw_acen:/ACEN/img/
+
+echo "-----------------------------"
+echo " Done uploading ACEN files!!! "
+echo "-----------------------------"
