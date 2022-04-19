@@ -14,13 +14,22 @@ echo "--------------------------"
 # SRCDIR=${OUTDIR}/.test
 SRCDIR=${OUTDIR}
 
-for f in $(find ${SRCDIR}/maps/ -type f -name "wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png"); do cp "$f" ${f%_$YY2-$mm2-${dd2}_${HH2}PHT.png}_latest.png; done
-scp ${SRCDIR}/maps/*_latest.png panahon.linode:~/websites/panahon/resources/model/img/
-scp ${SRCDIR}/maps/*_latest.png panahon.alapaap:~/websites/panahon-php/resources/model/img/
+cat << EOF > ${SRCDIR}/info.json
+{
+    "year": "${YY2}",
+    "month": "${mm2}", 
+    "day": "${dd2}", 
+    "hour": "${HH2}"
+}
+EOF
+scp ${SRCDIR}/info.json panahon.linode:~/websites/panahon/resources/model/
+scp ${SRCDIR}/info.json panahon.alapaap:~/websites/panahon-php/resources/model/
 
-for f in $(find ${SRCDIR}/timeseries/img/ -type f -name "wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png"); do cp "$f" ${f%_$YY2-$mm2-${dd2}_${HH2}PHT.png}_latest.png; done
-scp ${SRCDIR}/timeseries/img/*_latest.png panahon.linode:~/websites/panahon/resources/model/img/
-scp ${SRCDIR}/timeseries/img/*_latest.png panahon.alapaap:~/websites/panahon-php/resources/model/img/
+scp ${SRCDIR}/maps/wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png panahon.linode:~/websites/panahon/resources/model/img/
+scp ${SRCDIR}/maps/wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png panahon.alapaap:~/websites/panahon-php/resources/model/img/
+
+scp ${SRCDIR}/timeseries/img/wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png panahon.linode:~/websites/panahon/resources/model/img/
+scp ${SRCDIR}/timeseries/img/wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png panahon.alapaap:~/websites/panahon-php/resources/model/img/
 
 for f in $(find ${SRCDIR}/web/maps/ -type f -name "wrf-*$YY2-$mm2-${dd2}_${HH2}PHT.png"); do cp "$f" ${f%_$YY2-$mm2-${dd2}_${HH2}PHT.png}_latest.png; done
 scp ${SRCDIR}/web/maps/*_latest.png panahon.linode:~/websites/panahon/resources/model/web_img/
