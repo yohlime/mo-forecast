@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ${SCRIPT_DIR}/set_env_wrf.run.sh
-
 echo "---------------------------------"
 echo " Starting python postprocessing! "
 echo "---------------------------------"
