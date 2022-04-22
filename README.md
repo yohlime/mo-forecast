@@ -1,4 +1,4 @@
-# MO-ECW WRF automation
+# MO Automated WRF system
 
 ## Installation
 ---
@@ -7,11 +7,11 @@
 - bash environment
 - slurm
 - preinstalled WRF system
-- python 3.8+
+- python 3.7+
 
 ### 1. Clone the repo
 ```
-git clone http://rcs.observatory.ph/git/egozo/mo_wcr_forecast.git ~/forecast
+git clone http://rcs.observatory.ph/git/egozo/mo_forecast.git ~/forecast
 ```
 
 ### 2. Create a configuration file
