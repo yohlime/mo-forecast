@@ -13,6 +13,8 @@ export WRF_MAINDIR=${MAINDIR}/model
 export WRF_REALDIR=${MAINDIR}/model/WRF
 export WRF_ENS=${MAINDIR}/model/ENSEMBLE
 
+export WRF_MODE=3dvar # optional, possible values: 3dvar
+
 export WRFRES=5
 export WRF_FCST_DAYS=5
 export NAMELIST_SUFF=mowcr_solar
@@ -34,7 +36,7 @@ export EWB_TRMM_CLIM=${MAINDIR}/ewb/trmm/clim
 
 export CDO=/opt/tools/nc/cdo
 
-export CONDA_PREFIX=/home/miniconda3/envs
+export CONDA_PREFIX=/home/miniconda3/envs/wrf
 export MPLBACKEND="agg"
 export PYTHONPATH=${SCRIPT_DIR}/python:${PYTHONPATH}
 export PYTHON=${CONDA_PREFIX}/bin/python

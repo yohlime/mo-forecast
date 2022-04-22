@@ -1,46 +1,4 @@
 #!/bin/bash
-PYTHONCONDA=/home/miniconda3/envs/toolbox/bin/python
-source $SCRIPT_DIR/set_env_wrf.run.sh
-
-# -------------------------------------------- #
-#     Link the ICBC in this model directory    #
-# -------------------------------------------- #
-cd ${WRF_REALDIR}
-rm met_em.d0*
-ln -s ${WRF_MAINDIR}/WPS/${WPS_NAMELIST_SUFF}/met_em.d0* .
-for f in met_em.* ; do mv -v "$f" $(echo "$f" | tr ':' '_'); done
-
-# -------------------------------------------- #
-#             Edit namelist.input              #
-# -------------------------------------------- #
-
-rm -f namelist.input
-sed -i "2s/.*/\ run_days                            = ${WRF_FCST_DAYS},/" namelist.input_${NAMELIST_RUN}
-sed -i "6s/.*/\ start_year                          = ${FCST_YY},${FCST_YY},/" namelist.input_${NAMELIST_RUN}
-sed -i "7s/.*/\ start_month                         = ${FCST_MM},${FCST_MM},/" namelist.input_${NAMELIST_RUN}
-sed -i "8s/.*/\ start_day                           = ${FCST_DD},${FCST_DD},/" namelist.input_${NAMELIST_RUN}
-sed -i "9s/.*/\ start_hour                          = ${FCST_ZZ},${FCST_ZZ},/" namelist.input_${NAMELIST_RUN}
-sed -i "12s/.*/\ end_year                            = ${FCST_YY2},${FCST_YY2},/" namelist.input_${NAMELIST_RUN}
-sed -i "13s/.*/\ end_month                           = ${FCST_MM2},${FCST_MM2},/" namelist.input_${NAMELIST_RUN}
-sed -i "14s/.*/\ end_day                             = ${FCST_DD2},${FCST_DD2},/" namelist.input_${NAMELIST_RUN}
-sed -i "15s/.*/\ end_hour                            = ${FCST_ZZ2},${FCST_ZZ2},/" namelist.input_${NAMELIST_RUN}
-ln -s namelist.input_${NAMELIST_RUN} namelist.input
-
-# -------------------------------------------- #
-#                Run Real.exe                  #
-# -------------------------------------------- #
-echo "  ********************  "
-echo " Running real "
-echo "  ********************  "
-rm -f wrfbdy* wrfinput* 
-srun ./real.exe >& log.real & tail --pid=$! -f rsl.error.0000
-
-mkdir -p ${WRF_REALDIR}/wrfreal_tmp
-mv wrfbdy_d01 ${WRF_REALDIR}/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}
-mv wrfinput_d01 ${WRF_REALDIR}/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}
-echo "  ********************  "
-echo " End of REAL "
-echo "  ********************  "
 
 # -------------------------------------------- #
 #     Process MADIS+ AWS assimilation data     #
@@ -115,11 +73,10 @@ sed -i "11s/.*/init = '${HHA}PHT'/" prepare_stations.py
 
 echo " ************************** "
 echo "Preparing station data..."
-$PYTHONCONDA prepare_stations.py
+$PYTHON prepare_stations.py
 
 ln -s input/point/*.csv .
 ln -s ${AWSDIR}/coordinates.csv .
-
 
 ./convert.exe
 
@@ -246,24 +203,3 @@ mv wrfvar_output wrfinput_d01
 echo "  ********************  "
 echo " End of WRFDA "
 echo "  ********************  "
-
-# -------------------------------------------- #
-#                Run WRF.exe                   #
-# -------------------------------------------- #
-echo "  ********************  "
-echo " Running WRF "
-echo "  ********************  "
-
-cd ${WRF_REALDIR}
-ln -s ${WRF_MAINDIR}/WRF3DVar/wrfinput_d01 .
-ln -s ${WRF_MAINDIR}/WRF3DVar/wrfbdy_d01 .
-
-srun ./wrf.exe >& log.wrf & tail --pid=$! -f rsl.error.0000
-echo "  ********************  "
-echo " End of WRF "
-echo "  ********************  "
-
-mkdir -p ${NAMELIST_RUN}
-
-mv wrfout_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}_00_00 ${NAMELIST_RUN}/wrfout_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}_00_00_${WRF_FCST_DAYS}-day_fcst_rain
-#mv wrfout_d02_${YY}-${mm}-${dd}_${FCST_ZZ}_00_00 wrfout_d02_${YY}-${mm}-${dd}_${FCST_ZZ}_00_00_${WRF_FCST_DAYS}-day_fcst_rain

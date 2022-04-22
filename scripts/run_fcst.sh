@@ -2,6 +2,7 @@
 
 #################### CONSTANTS ####################
 DOWNLOAD_INPUT=1
+DOWNLOAD_MADIS=1
 UPLOAD_OUTPUT=1
 POST_PROCESS=1
 SLURM_OPTS0="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES"
@@ -13,6 +14,7 @@ function show_usage() {
   printf "\n"
   printf "Options:\n"
   printf " --no-download, Do not download WRF inputs (GFS, etc...)\n"
+  printf " --no-download-madis, Do not download 3DVAR inputs (MADIS, etc...)\n"
   printf " --no-upload, Do not upload outputs\n"
   printf " --no-post-proc, No post processing\n"
   printf " -h|--help, Print help\n"
@@ -32,6 +34,9 @@ while [ ! -z "$1" ]; do
   case "$1" in
     --no-download)
       DOWNLOAD_INPUT=0
+      ;;
+    --no-download-madis)
+      DOWNLOAD_MADIS=0
       ;;
     --no-upload)
       UPLOAD_OUTPUT=0
@@ -60,6 +65,11 @@ if [ $DOWNLOAD_INPUT -eq 1 ]; then
   source $SCRIPT_DIR/download_gfs.aria2.sh
 fi
 
+if [[ $WRF_MODE == '3dvar' && $DOWNLOAD_MADIS -eq 1 ]]; then
+  # download MADIS 
+  source $SCRIPT_DIR/download_madis.aria2.sh
+fi
+
 NDL_FILES=$(ls $GFSDIR/*.grb | wc -l)
 
 if [ $NDL_FILES -eq $NUM_FILES ]; then
@@ -73,23 +83,27 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
   # WRF
   # schedule multiple slurm WRF jobs based on WRF_RUN_NAMES
+  IFS=':' read -ra run_names <<< "$WRF_RUN_NAMES"
+  IFS=':' read -ra run3dvar_names <<< "$WRFDA_RUN_NAMES"
   run_idx=1
-  while IFS=':' read -ra RUN_NAMES; do
-    for run_name in "${RUN_NAMES[@]}"; do
-      export NAMELIST_RUN=$run_name
+  for run_name in "${run_names[@]}"; do
+    export NAMELIST_RUN=$run_name
 
-      WRF_NTASKS=$SLURM_WRF_NTASKS
-      slurm_opts="$SLURM_OPTS0"
-      slurm_opts="$slurm_opts -d afterok:$prev_jid"
-      slurm_opts="$slurm_opts -J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
-      slurm_opts="$slurm_opts -o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
-      slurm_opts="$slurm_opts -n $WRF_NTASKS"
-      slurm_opts="$slurm_opts -c $SLURM_WRF_CPUS_PER_TASK"
-      prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
+    if [[ $WRF_MODE == '3dvar' ]]; then
+      export NAMELIST_3DVar=${run3dvar_names[$run_idx -1]}
+    fi
 
-      run_idx=$((run_idx+1))
-    done
-  done <<< "$WRF_RUN_NAMES"
+    WRF_NTASKS=$SLURM_WRF_NTASKS
+    slurm_opts="$SLURM_OPTS0"
+    slurm_opts="$slurm_opts -d afterok:$prev_jid"
+    slurm_opts="$slurm_opts -J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
+    slurm_opts="$slurm_opts -o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
+    slurm_opts="$slurm_opts -n $WRF_NTASKS"
+    slurm_opts="$slurm_opts -c $SLURM_WRF_CPUS_PER_TASK"
+    prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
+
+    run_idx=$((run_idx+1))
+  done
 
   if [ $POST_PROCESS -eq 1 ]; then
     # Post processing
@@ -114,21 +128,20 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
     ### ARWpost
     ### schedule multiple slurm ARWpost jobs based on WRF_RUN_NAMES
+    IFS=':' read -ra run_names <<< "$WRF_RUN_NAMES"
     run_idx=1
-    while IFS=':' read -ra RUN_NAMES; do
-      for run_name in "${RUN_NAMES[@]}"; do
-        export NAMELIST_RUN=$run_name
+    for run_name in "${run_names[@]}"; do
+      export NAMELIST_RUN=$run_name
 
-        slurm_opts=$SLURM_OPTS0
-        slurm_opts="$slurm_opts -d afterok:$prev_jid"
-        slurm_opts="$slurm_opts -J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
-        slurm_opts="$slurm_opts -o $WRF_MAINDIR/ARWpost/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
-        slurm_opts="$slurm_opts -n 1"
-        prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_arwpost.sh")
+      slurm_opts=$SLURM_OPTS0
+      slurm_opts="$slurm_opts -d afterok:$prev_jid"
+      slurm_opts="$slurm_opts -J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
+      slurm_opts="$slurm_opts -o $WRF_MAINDIR/ARWpost/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
+      slurm_opts="$slurm_opts -n 1"
+      prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_arwpost.sh")
 
-        run_idx=$((run_idx+1))
-      done
-    done <<< "$WRF_RUN_NAMES"
+      run_idx=$((run_idx+1))
+    done
 
     ### ENSEMBLE Post processing
     slurm_opts=$SLURM_OPTS0

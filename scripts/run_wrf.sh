@@ -1,5 +1,4 @@
 #!/bin/bash
-
 source $SCRIPT_DIR/set_env_wrf.run.sh
 
 # -------------------------------------------- #
@@ -32,12 +31,25 @@ ln -s namelist.input_${NAMELIST_RUN} namelist.input
 echo "  ********************  "
 echo " Running real "
 echo "  ********************  "
+
 rm -f wrfbdy* wrfinput* 
 srun ./real.exe >& log.real & tail --pid=$! -f rsl.error.0000
+
 echo "  ********************  "
 echo " End of REAL "
 echo "  ********************  "
 
+if [[ $WRF_MODE == '3dvar' ]]; then
+  mkdir -p ${WRF_REALDIR}/wrfreal_tmp
+  mv wrfbdy_d01 ${WRF_REALDIR}/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}
+  mv wrfinput_d01 ${WRF_REALDIR}/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}
+
+  source $SCRIPT_DIR/run_wrfda_pre.sh
+
+  cd ${WRF_REALDIR}
+  ln -s ${WRF_MAINDIR}/WRF3DVar/wrfinput_d01 .
+  ln -s ${WRF_MAINDIR}/WRF3DVar/wrfbdy_d01 .
+fi
 
 # -------------------------------------------- #
 #                Run WRF.exe                   #
@@ -45,7 +57,9 @@ echo "  ********************  "
 echo "  ********************  "
 echo " Running WRF "
 echo "  ********************  "
+
 srun ./wrf.exe >& log.wrf & tail --pid=$! -f rsl.error.0000
+
 echo "  ********************  "
 echo " End of WRF "
 echo "  ********************  "
