@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 #################### CONSTANTS ####################
 DOWNLOAD_INPUT=1
@@ -9,8 +9,8 @@ SLURM_OPTS0="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES"
 ###################################################
 
 #################### FUNCTIONS ####################
-function show_usage() {
-  printf "Usage: $0 [options [parameters]]\n"
+show_usage() {
+  printf "Usage: %s [options [parameters]]\n" "$0"
   printf "\n"
   printf "Options:\n"
   printf " --no-download, Do not download WRF inputs (GFS, etc...)\n"
@@ -22,31 +22,31 @@ function show_usage() {
   return 0
 }
 
-function submit_job() {
-  jid=$(sbatch $1)
-  echo $jid | tr -dc '0-9'
+submit_job() {
+  jid=$(sbatch "$1")
+  echo "$jid" | tr -dc '0-9'
   return 0
 }
 ###################################################
 
 ################### PROCESS ARGS ###################
-while [ ! -z "$1" ]; do
+while [ -n "$1" ]; do
   case "$1" in
-    --no-download)
-      DOWNLOAD_INPUT=0
-      ;;
-    --no-download-madis)
-      DOWNLOAD_MADIS=0
-      ;;
-    --no-upload)
-      UPLOAD_OUTPUT=0
-      ;;
-    --no-post-proc)
-      POST_PROCESS=0
-      ;;
-    *)
-      show_usage
-      ;;
+  --no-download)
+    DOWNLOAD_INPUT=0
+    ;;
+  --no-download-madis)
+    DOWNLOAD_MADIS=0
+    ;;
+  --no-upload)
+    UPLOAD_OUTPUT=0
+    ;;
+  --no-post-proc)
+    POST_PROCESS=0
+    ;;
+  *)
+    show_usage
+    ;;
   esac
   shift
 done
@@ -56,23 +56,20 @@ echo "------------------"
 echo " Starting WRF Forecast "
 echo "------------------"
 
-source $SCRIPT_DIR/set_date_vars.sh
-
-mkdir -p $GFSDIR
+source "$SCRIPT_DIR/set_date_vars.sh"
 
 if [ $DOWNLOAD_INPUT -eq 1 ]; then
   # download GFS
-  source $SCRIPT_DIR/download_gfs.aria2.sh
+  source "$SCRIPT_DIR/download_gfs.sh"
 fi
 
 if [[ $WRF_MODE == '3dvar' && $DOWNLOAD_MADIS -eq 1 ]]; then
-  # download MADIS 
-  source $SCRIPT_DIR/download_madis.aria2.sh
+  # download MADIS
+  source "$SCRIPT_DIR/download_madis.aria2.sh"
 fi
 
-NDL_FILES=$(ls $GFSDIR/*.grb | wc -l)
-
-if [ $NDL_FILES -eq $NUM_FILES ]; then
+GFS_FILES=("$GFS_DIR"/*.grb)
+if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
 
   # WPS
   slurm_opts="$SLURM_OPTS0"
@@ -83,14 +80,14 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
   # WRF
   # schedule multiple slurm WRF jobs based on WRF_RUN_NAMES
-  IFS=':' read -ra run_names <<< "$WRF_RUN_NAMES"
-  IFS=':' read -ra run3dvar_names <<< "$WRFDA_RUN_NAMES"
+  IFS=':' read -ra run_names <<<"$WRF_RUN_NAMES"
+  IFS=':' read -ra run3dvar_names <<<"$WRFDA_RUN_NAMES"
   run_idx=1
   for run_name in "${run_names[@]}"; do
     export NAMELIST_RUN=$run_name
 
     if [[ $WRF_MODE == '3dvar' ]]; then
-      export NAMELIST_3DVar=${run3dvar_names[$run_idx -1]}
+      export NAMELIST_3DVar=${run3dvar_names[$run_idx - 1]}
     fi
 
     WRF_NTASKS=$SLURM_WRF_NTASKS
@@ -102,7 +99,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
     slurm_opts="$slurm_opts -c $SLURM_WRF_CPUS_PER_TASK"
     prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
 
-    run_idx=$((run_idx+1))
+    run_idx=$((run_idx + 1))
   done
 
   if [ $POST_PROCESS -eq 1 ]; then
@@ -128,7 +125,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
 
     ### ARWpost
     ### schedule multiple slurm ARWpost jobs based on WRF_RUN_NAMES
-    IFS=':' read -ra run_names <<< "$WRF_RUN_NAMES"
+    IFS=':' read -ra run_names <<<"$WRF_RUN_NAMES"
     run_idx=1
     for run_name in "${run_names[@]}"; do
       export NAMELIST_RUN=$run_name
@@ -140,7 +137,7 @@ if [ $NDL_FILES -eq $NUM_FILES ]; then
       slurm_opts="$slurm_opts -n 1"
       prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_arwpost.sh")
 
-      run_idx=$((run_idx+1))
+      run_idx=$((run_idx + 1))
     done
 
     ### ENSEMBLE Post processing
