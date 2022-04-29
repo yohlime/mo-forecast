@@ -59,7 +59,7 @@ DL_STIME=$(date +%s)
 
 # Download
 DL_LOG=$MAINDIR/input/gfs_files/gfs_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log
-aria2c -j5 -x8 -d "$GFS_DIR" -i "$DL_LIST" -l "$DL_LOG"
+aria2c -j5 -x8 -d "$GFS_DIR" -i "$DL_LIST" -l "$DL_LOG" --log-level=notice
 
 # Record end time
 DL_ETIME=$(date +%s)
