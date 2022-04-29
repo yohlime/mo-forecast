@@ -5,7 +5,7 @@ DOWNLOAD_INPUT=1
 DOWNLOAD_MADIS=1
 UPLOAD_OUTPUT=1
 POST_PROCESS=1
-SLURM_OPTS0="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES"
+SLURM_OPTS0="--parsable -A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES"
 ###################################################
 
 #################### FUNCTIONS ####################
@@ -19,12 +19,6 @@ function show_usage() {
   printf " --no-post-proc, No post processing\n"
   printf " -h|--help, Print help\n"
 
-  return 0
-}
-
-function submit_job() {
-  jid=$(sbatch $1)
-  echo "$jid" | tr -dc '0-9'
   return 0
 }
 ###################################################
@@ -52,13 +46,11 @@ while [ -n "$1" ]; do
 done
 ###################################################
 
-echo "------------------"
+echo "-----------------------"
 echo " Starting WRF Forecast "
-echo "------------------"
+echo "-----------------------"
 
 source "$SCRIPT_DIR/set_date_vars.sh"
-
-export GFS_DIR="${MAINDIR:?unset}/input/gfs_files/$FCST_YYYYMMDD/$FCST_ZZ"
 
 if [ $DOWNLOAD_INPUT -eq 1 ]; then
   # download GFS
@@ -78,7 +70,7 @@ if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
   slurm_opts="$slurm_opts -J wps-$FCST_YYYYMMDD$FCST_ZZ"
   slurm_opts="$slurm_opts -o $WRF_MAINDIR/WPS/wps_$FCST_YYYYMMDD$FCST_ZZ.out"
   slurm_opts="$slurm_opts -n $SLURM_WPS_NTASKS"
-  prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wps.sh")
+  prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_wps.sh")
 
   # WRF
   # schedule multiple slurm WRF jobs based on WRF_RUN_NAMES
@@ -99,7 +91,7 @@ if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
     slurm_opts="$slurm_opts -o $WRF_MAINDIR/WRF/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
     slurm_opts="$slurm_opts -n $WRF_NTASKS"
     slurm_opts="$slurm_opts -c $SLURM_WRF_CPUS_PER_TASK"
-    prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_wrf.sh")
+    prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_wrf.sh")
 
     run_idx=$((run_idx + 1))
   done
@@ -113,7 +105,7 @@ if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
     slurm_opts="$slurm_opts -J python-$FCST_YYYYMMDD$FCST_ZZ"
     slurm_opts="$slurm_opts -o ${OUTDIR}/logs/python/python_$FCST_YYYYMMDD$FCST_ZZ.out"
     slurm_opts="$slurm_opts -n 12"
-    prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/postproc_python.sh")
+    prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/postproc_python.sh")
 
     if [ $UPLOAD_OUTPUT -eq 1 ]; then
       ### Web Upload
@@ -122,7 +114,7 @@ if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
       slurm_opts="$slurm_opts -J web-upload-$FCST_YYYYMMDD$FCST_ZZ"
       slurm_opts="$slurm_opts -o $MAINDIR/output/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log"
       slurm_opts="$slurm_opts -n 1"
-      prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/web_upload.sh")
+      prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/web_upload.sh")
     fi
 
     ### ARWpost
@@ -137,7 +129,7 @@ if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
       slurm_opts="$slurm_opts -J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
       slurm_opts="$slurm_opts -o $WRF_MAINDIR/ARWpost/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
       slurm_opts="$slurm_opts -n 1"
-      prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_arwpost.sh")
+      prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_arwpost.sh")
 
       run_idx=$((run_idx + 1))
     done
@@ -148,7 +140,7 @@ if [ ${#GFS_FILES[@]} -eq $NUM_FILES ]; then
     slurm_opts="$slurm_opts -J ens-$FCST_YYYYMMDD$FCST_ZZ"
     slurm_opts="$slurm_opts -o $WRF_MAINDIR/ENSEMBLE/ens_$FCST_YYYYMMDD$FCST_ZZ.out"
     slurm_opts="$slurm_opts -n 1"
-    prev_jid=$(submit_job "$slurm_opts $SCRIPT_DIR/run_post_ens.sh")
+    prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_post_ens.sh")
   fi
 
 fi
