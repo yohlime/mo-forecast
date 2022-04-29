@@ -32,9 +32,11 @@ TEST_PARAMS="var_RH=on&subregion=&leftlon=115&rightlon=120&toplat=10&bottomlat=5
 # Create download list
 touch "$DL_LIST"
 for i in $(seq -f "%03g" 0 $END_TS); do
-  URL="${BASE_URL}?${FILE_PARAM}${i}&${DIR_PARAM}&${STATIC_PARAMS}"
-  echo "${URL}" >>"$DL_LIST"
-  echo -e "\tout=GFS${i}.grb" >>"$DL_LIST"
+  if [ ! -f "$GFS_DIR/GFS$i.grb" ]; then
+    URL="${BASE_URL}?${FILE_PARAM}${i}&${DIR_PARAM}&${STATIC_PARAMS}"
+    echo "${URL}" >>"$DL_LIST"
+    echo -e "\tout=GFS$i.grb" >>"$DL_LIST"
+  fi
 done
 
 # Wait for files to be available
