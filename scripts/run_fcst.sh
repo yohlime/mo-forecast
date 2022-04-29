@@ -9,7 +9,7 @@ SLURM_OPTS0="-A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES"
 ###################################################
 
 #################### FUNCTIONS ####################
-show_usage() {
+function show_usage() {
   printf "Usage: %s [options [parameters]]\n" "$0"
   printf "\n"
   printf "Options:\n"
@@ -22,8 +22,8 @@ show_usage() {
   return 0
 }
 
-submit_job() {
-  jid=$(sbatch "$1")
+function submit_job() {
+  jid=$(sbatch $1)
   echo "$jid" | tr -dc '0-9'
   return 0
 }
@@ -57,6 +57,8 @@ echo " Starting WRF Forecast "
 echo "------------------"
 
 source "$SCRIPT_DIR/set_date_vars.sh"
+
+export GFS_DIR="${MAINDIR:?unset}/input/gfs_files/$FCST_YYYYMMDD/$FCST_ZZ"
 
 if [ $DOWNLOAD_INPUT -eq 1 ]; then
   # download GFS

@@ -4,11 +4,6 @@ echo "---------------------------------"
 echo " Downloading latest GFS files... "
 echo "---------------------------------"
 
-if [ -z "$FCST_YYYYMMDD" ]; then
-  source "$SCRIPT_DIR/set_date_vars.sh"
-fi
-export GFS_DIR="${MAINDIR:?unset}/input/gfs_files/$FCST_YYYYMMDD/$FCST_ZZ"
-
 mkdir -p "$GFS_DIR"
 mkdir -p "$TEMP_DIR"
 mkdir -p "$MAINDIR/input/gfs_files"
