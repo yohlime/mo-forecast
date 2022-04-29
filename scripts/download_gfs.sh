@@ -16,7 +16,7 @@ mkdir -p "$MAINDIR/input/gfs_files"
 # Set variables
 DL_LIST=$TEMP_DIR/gfs_dl_list.txt
 DL_OUT=$TEMP_DIR/gfs_dl.out
-DL_LOG_FILE="$WORKDIR/input/gfs_files/gfs_dl_speed.log"
+DL_LOG_FILE="$MAINDIR/input/gfs_files/gfs_dl_speed.log"
 
 END_TS=$((WRF_FCST_DAYS * 24)) # Last timestep to download
 
