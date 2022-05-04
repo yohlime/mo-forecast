@@ -59,7 +59,7 @@ fi
 
 if [[ $WRF_MODE == '3dvar' && $DOWNLOAD_MADIS -eq 1 ]]; then
   # download MADIS
-  source "$SCRIPT_DIR/download_madis.aria2.sh"
+  source "$SCRIPT_DIR/download_madis.sh"
 fi
 
 GFS_FILES=("$GFS_DIR"/*.grb)
