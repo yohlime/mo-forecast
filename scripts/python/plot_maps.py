@@ -144,7 +144,7 @@ def plot_maps(ds, out_dir):
                     add_labels=False,
                     add_colorbar=False,
                 )
-            p.colorbar.ax.set_title(f"[{var_info['units']}]", fontsize=10)
+            p.colorbar.ax.set_title(f"[{var_info['units']}]", pad=20, fontsize=10)
             ax.coastlines()
             ax.set_extent((*xlim, *ylim))
             if var_name in ["wpd", "ppv"]:
