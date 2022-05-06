@@ -40,6 +40,7 @@ def dat_format(ds, site_lon, site_lat):
             select = np.insert(
                 _data_reset.hi.sel(time=_data_reset.time.dt.day == i), 0, 0
             ).fillna(0)
+            select[1] = select[1] * 0
         else:
             select = _data_reset.hi.sel(time=_data_reset.time.dt.day == i).fillna(0)
         dat_formatted.append(select)
@@ -81,6 +82,10 @@ def plot_gauge(ds, outdir):
             _sub_ds[i].time.dt.strftime("%Y-%m-%d").isel(time=0).values.tolist()
             for i in range(len(_sub_ds[:3]))
         ]
+        _day = [
+            _sub_ds[i].time.dt.strftime("%a (%b %d)").isel(time=0).values.tolist()
+            for i in np.arange(len(_sub_ds[:3]))
+        ]
         _init_time = (
             pd.Series(ds["time"].values)
             .dt.tz_localize("utc")
@@ -88,19 +93,31 @@ def plot_gauge(ds, outdir):
             .dt.tz_localize(None)
         )
 
-        fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(aspect="equal"))
+        fig, ax = plt.subplots(
+            ncols=3,
+            figsize=(16, 16),
+            subplot_kw=dict(aspect="equal"),
+            sharex=True,
+            sharey=True,
+        )
+        plt.tight_layout(pad=0.0)
+        fig.canvas.draw()
         fig.suptitle(
-            station_name + " Heat Index \n (" + _fname[0] + " to " + _fname[2] + ")",
+            f"{station_name} Heat Index \n ({_fname[0]} to { _fname[2]})",
             ha="center",
-            y=0.95,
-            fontsize=15,
+            y=0.73,
+            fontsize=16,
         )
-        ax.annotate(
-            "WRF ensemble forecast initialized at "
-            + _init_time.dt.strftime("%Y-%m-%d %H")[0]
-            + " PHT",
-            xy=(-0.85, 1.2),
+
+        axlist = ax.flatten()
+        axlist[0].text(
+            1.6,
+            1.5,
+            f"WRF ensemble forecast initialized at {_init_time.dt.strftime('%Y-%m-%d %H')[0]} PHT",
         )
+
+        for i in range(3):
+            axlist[i].set_title(_day[i])
 
         _dat = np.ones(12).tolist()
         _time = (
@@ -112,144 +129,127 @@ def plot_gauge(ds, outdir):
 
         _outer_colors = ["white"] * 13
         _inner_colors = [color(_sub_ds[i]) for i in range(len(_sub_ds[:3]))]
-        _size = 0.16
 
-        _wedges, _text = ax.pie(
+        _wedges, _text = axlist[0].pie(
             _dat,
-            radius=0.95,
+            radius=0.93,
             colors=_outer_colors,
             counterclock=False,
             startangle=180,
-            wedgeprops=dict(width=0.45, edgecolor="w", linewidth=0.6),
+            wedgeprops=dict(width=0.35, edgecolor="w", linewidth=0.6),
         )
-        d1 = ax.pie(
+
+        _d1 = axlist[0].pie(
             _dat,
-            radius=0.95,
+            radius=0.93,
             colors=_inner_colors[0],
             counterclock=False,
             startangle=180,
-            wedgeprops=dict(width=0.15, edgecolor="w", linewidth=0.6),
+            wedgeprops=dict(width=0.35, edgecolor="w", linewidth=0.6),
         )
-        d2 = ax.pie(
+        _d2 = axlist[1].pie(
             _dat,
-            radius=0.95 - _size,
+            radius=0.93,
             colors=_inner_colors[1],
             counterclock=False,
             startangle=180,
-            wedgeprops=dict(width=0.16, edgecolor="w", linewidth=0.6, alpha=0.4),
+            wedgeprops=dict(width=0.35, edgecolor="w", linewidth=0.6),
         )
-        d3 = ax.pie(
+        _d3 = axlist[2].pie(
             _dat,
-            radius=(0.95 - _size) - 0.17,
+            radius=0.93,
             colors=_inner_colors[2],
             counterclock=False,
             startangle=180,
-            wedgeprops=dict(width=0.15, edgecolor="w", linewidth=0.6, alpha=0.4),
+            wedgeprops=dict(width=0.35, edgecolor="w", linewidth=0.6),
         )
 
-        # Get poisitions of missing values and plot with hatches
-        nan1, nan2, nan3 = (
+        _nan1, _nan2, _nan3 = (
             [i for i, e in enumerate(_sub_ds[0].values.tolist()) if e == 0],
             [i for i, e in enumerate(_sub_ds[1].values.tolist()) if e == 0],
             [i for i, e in enumerate(_sub_ds[2].values.tolist()) if e == 0],
         )
-        for i in nan1:
-            d1[0][i].set_hatch("..."), d1[0][i].set_edgecolor("k"), d1[0][i].set_alpha(
-                0.4
-            )
-        for i in nan2:
-            d2[0][i].set_hatch("..."), d2[0][i].set_edgecolor("k"), d2[0][i].set_alpha(
-                0.4
-            )
-        for i in nan3:
-            d3[0][i].set_hatch("..."), d3[0][i].set_edgecolor("k"), d3[0][i].set_alpha(
-                0.4
-            )
+
+        for i in _nan1:
+            _d1[0][i].set_hatch("..."), _d1[0][i].set_edgecolor("k"), _d1[0][
+                i
+            ].set_alpha(0.4)
+        for i in _nan2:
+            _d2[0][i].set_hatch("..."), _d2[0][i].set_edgecolor("k"), _d2[0][
+                i
+            ].set_alpha(0.4)
+        for i in _nan3:
+            _d3[0][i].set_hatch("..."), _d3[0][i].set_edgecolor("k"), _d3[0][
+                i
+            ].set_alpha(0.4)
 
         for i, p in enumerate(_wedges):
             y = np.sin(np.deg2rad(p.theta2))
             x = np.cos(np.deg2rad(p.theta2))
 
-            if p.theta1 > 75:
-                ax.annotate(
-                    _time[i],
-                    xy=(x, y),
-                    xytext=(0, 0),
-                    textcoords="offset points",
-                    ha="right",
-                    va="center",
-                )
+            for ax in axlist:
+                if p.theta1 > 75:
+                    ax.annotate(
+                        _time[i],
+                        xy=(x, y),
+                        xytext=(0.5, 0.5),
+                        textcoords="offset points",
+                        ha="right",
+                        va="center",
+                        fontsize=9,
+                    )
 
-            elif round(p.theta1) == 75:
-                ax.annotate(
-                    _time[i],
-                    xy=(x, y),
-                    xytext=(0, 0),
-                    textcoords="offset points",
-                    ha="center",
-                    va="bottom",
-                )
+                elif round(p.theta1) == 75:
+                    ax.annotate(
+                        _time[i],
+                        xy=(x, y),
+                        xytext=(0.5, 0.5),
+                        textcoords="offset points",
+                        ha="center",
+                        va="bottom",
+                        fontsize=9,
+                    )
 
-            elif p.theta1 < 74:
-                ax.annotate(
-                    _time[i],
-                    xy=(x, y),
-                    xytext=(0, 0),
-                    textcoords="offset points",
-                    ha="left",
-                    va="center",
-                )
+                elif p.theta1 < 74:
+                    ax.annotate(
+                        _time[i],
+                        xy=(x, y),
+                        xytext=(0.5, 0.5),
+                        textcoords="offset points",
+                        ha="left",
+                        va="center",
+                        fontsize=9,
+                    )
 
-        day = [
-            _sub_ds[i].time.dt.strftime("%b %d,%Y").isel(time=0).values.tolist()
-            for i in np.arange(len(_sub_ds[:3]))
+        legends = [
+            mpatches.Patch(color=cols, label=labels)
+            for cols, labels in {
+                "#F0E786": "Caution",
+                "#FF8C00": "Extreme Caution",
+                "red": "Danger",
+                "purple": "Extreme Danger",
+            }.items()
+        ] + [
+            mpatches.Patch(
+                edgecolor="k", facecolor="w", alpha=0.4, hatch="...", label="No Data"
+            )
         ]
-        for i, (j, t) in enumerate(
-            (zip(np.arange(0.13, 0.52, 0.16), np.linspace(0.0, 0.2, 3)[::-1]))
-        ):
-            ax.annotate(
-                day[i],
-                xy=(x - j, y),
-                xytext=(-0.2, -0.1 - t),
-                arrowprops=dict(
-                    arrowstyle="-",
-                    connectionstyle="angle,angleA=0,angleB=90,rad=0",
-                    color="#C5C5C5",
-                ),
-            )
 
-        for i, (j, t) in enumerate(
-            (zip(np.arange(1.55, 1.9, 0.16)[::-1], np.linspace(0.0, 0.2, 3)[::-1]))
-        ):
-            ax.annotate(
-                "",
-                xy=(x - j, y),
-                xytext=(-0.2, -0.1 - t),
-                arrowprops=dict(
-                    arrowstyle="-",
-                    connectionstyle="angle,angleA=0,angleB=90,rad=0",
-                    color="#C5C5C5",
-                ),
-            )
-
-        yellow, orange = mpatches.Patch(
-            color="#F0E786", label="Caution"
-        ), mpatches.Patch(color="#FF8C00", label="Extreme Caution")
-        red, purple = mpatches.Patch(color="red", label="Danger"), mpatches.Patch(
-            color="purple", label="Extreme Danger"
-        )
-        plt.legend(
-            handles=[yellow, orange, red, purple],
+        axlist[1].legend(
+            handles=legends,
             loc=10,
-            bbox_to_anchor=(0.25, 0.07, 0.5, 0.5),
-            ncol=2,
+            bbox_to_anchor=(0.25, 0.13, 0.5, 0.5),
+            ncol=3,
+            handleheight=1,
+            handlelength=2,
         )
 
         out_file = outdir / f"{station_name}_WRF_HI_{_fname[0]}-{_fname[2]}.png"
+
         fig.savefig(
             out_file,
             dpi=300,
-            facecolor=None,
-            bbox_inches=Bbox([[0, 2.5], [8, 8]]),
+            facecolor="white",
+            bbox_inches=Bbox([[0.0, 6.5], [16, 12]]),
         )
         plt.close()
