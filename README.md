@@ -14,14 +14,20 @@
 git clone http://rcs.observatory.ph/git/egozo/mo_forecast.git ~/forecast
 ```
 
-### 2. Create a configuration file
+### 2. Install conda environment
+```
+cd ~/forecast
+conda create -f conda.yaml -p ./.conda
+```
+
+### 3. Create a configuration file
 ```
 cd ~/forecast
 cp set_cron_env.sh.sample set_cron_env.sh
 vi set_cron_env.sh
 ```
 
-### 3. Setup required paths/files
+### 4. Setup required paths/files
 - __input__/ - input files needed by the WRF system (eg. GFS, etc.)
 - __output__/ - location of files created by post processing scripts
 - __model__/ - WRF system executables and related files
