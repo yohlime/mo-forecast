@@ -102,6 +102,24 @@ def extract_points(ds_dict, out_dir):
         _ds.append(da)
         # end region rain
 
+        # region relative humidity
+        print("Processing relative humidiy...")
+        _da = ds["rh"]
+
+        da = _da.mean("ens")
+        da.name = "rh"
+        _ds.append(da)
+        # end region relative humidity
+
+        # region heat index
+        print("Processing heat index...")
+        _da = ds["hi"]
+
+        da = _da.mean("ens")
+        da.name = "hi"
+        _ds.append(da)
+        # end region heat index
+
         new_ds_dict[k] = xr.merge(_ds)
 
     out_df = []
