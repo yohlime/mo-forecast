@@ -132,6 +132,11 @@ done
 echo "concatenating : " ${FILE_LIST[*]}
 cat $(echo ${FILE_LIST[*]}) > ob_$YYS$MMS$DDS${HHS}.ascii
 
+# Cleanup files and remove redundant observation data for assimilation to free storage space
+rm -rf ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/$YYS$MMS$DDS$HHS # MADIS data from individual sources
+rm ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/obs_* # concatenated MADIS data
+rm ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/obsall_* # concatenated MADIS + AWS data
+
 # -------------------------------------------- #
 #                 Run OBSPROC                  #
 # -------------------------------------------- #
