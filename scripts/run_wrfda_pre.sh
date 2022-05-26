@@ -28,14 +28,14 @@ HHA=${AWSDAT:11:2}
 echo " ************************** "
 echo "Running madis_to_little_r..."
 
-#mkdir -p ${WRF_MAINDIR}/MADIS2LITTLER/input/point
-cd ${WRF_MAINDIR}/MADIS2LITTLER
-rm -rf ${WRF_MAINDIR}/MADIS2LITTLER/input/point/*
-ln -s ${MADISDIR}/* ${WRF_MAINDIR}/MADIS2LITTLER/input/point/.
+#mkdir -p ${MAINDIR}/input/madis_files/MADIS2LITTLER/point
+cd ${SCRIPT_DIR}/MADIS2LITTLER
+rm -rf ${MAINDIR}/input/madis_files/MADIS2LITTLER/point/*
+ln -s ${MADISDIR}/* ${MAINDIR}/input/madis_files/MADIS2LITTLER/point/.
 
 # Edit madis_to_little_r.ksh
 rm -f run_madis_to_little_r.ksh
-sed -i "26s~.*~export MADIS_DATA=${WRF_MAINDIR}/MADIS2LITTLER/input~" run_madis_to_little_r_stat.ksh
+sed -i "26s~.*~export MADIS_DATA=${MAINDIR}/input/madis_files/MADIS2LITTLER~" run_madis_to_little_r_stat.ksh
 sed -i "27s~.*~export MADIS_STATIC=/home/MODELS/WRFutils/madis-4.3/static/~" run_madis_to_little_r_stat.ksh
 sed -i "37s/.*/export METAR=TRUE/" run_madis_to_little_r_stat.ksh
 sed -i "38s/.*/export MARINE=TRUE/" run_madis_to_little_r_stat.ksh
@@ -48,10 +48,12 @@ sed -i "44s/.*/export SATWND=TRUE/" run_madis_to_little_r_stat.ksh
 sed -i "49s/.*/SDATE=$YYS$MMS$DDS$HHS/" run_madis_to_little_r_stat.ksh
 sed -i "50s/.*/EDATE=$YYE$MME$DDE$HHE/" run_madis_to_little_r_stat.ksh
 sed -i "51s/.*/INTERVAL=1/" run_madis_to_little_r_stat.ksh
+sed -i "57s~.*~CODE_DIR=${SCRIPT_DIR}/MADIS2LITTLER/~" run_madis_to_little_r_stat.ksh
 ln -s run_madis_to_little_r_stat.ksh run_madis_to_little_r.ksh
 
 
 ./run_madis_to_little_r.ksh >& log.madistolittler & tail --pid=$! -f log.madistolittler
+mv log.madistolittler ${MAINDIR}/input/madis_files/MADIS2LITTLER/.
 
 echo "End of madis to little r!"
 echo " *********************** "
@@ -59,15 +61,15 @@ echo " *********************** "
 echo " ************************** "
 echo "Converting AWS to little r..."
 
-#mkdir -p ${WRF_MAINDIR}/MO2LITTLER/input/point
-cd ${WRF_MAINDIR}/MO2LITTLER
-rm -rf ${WRF_MAINDIR}/MO2LITTLER/input/point/*
-rm ${WRF_MAINDIR}/MO2LITTLER/*.csv
+#mkdir -p ${MAINDIR}/input/aws_files/point
+cd ${SCRIPT_DIR}/MO2LITTLER
+rm -rf ${MAINDIR}/input/aws_files/MO2LITTLER/point/*
+rm ${SCRIPT_DIR}/MO2LITTLER/*.csv
 
 # Edit prepare_stations.py
 sed -i "7s~.*~IN_DIR  = '${AWSDIR}'~" prepare_stations.py
-sed -i "8s~.*~WORK_DIR = '${WRF_MAINDIR}/MO2LITTLER'~" prepare_stations.py
-sed -i "9s~.*~OUT_DIR = '${WRF_MAINDIR}/MO2LITTLER/input/point'~" prepare_stations.py
+# sed -i "8s~.*~WORK_DIR = '${WRF_MAINDIR}/MO2LITTLER'~" prepare_stations.py
+sed -i "9s~.*~OUT_DIR = '${MAINDIR}/input/aws_files/MO2LITTLER/point'~" prepare_stations.py
 sed -i "10s/.*/yyyymmdd = '${YYA}-${MMA}-${DDA}'/" prepare_stations.py
 sed -i "11s/.*/init = '${HHA}PHT'/" prepare_stations.py
 
@@ -75,19 +77,19 @@ echo " ************************** "
 echo "Preparing station data..."
 $PYTHON prepare_stations.py
 
-ln -s input/point/*.csv .
-ln -s ${AWSDIR}/coordinates.csv .
+ln -s ${MAINDIR}/input/aws_files/MO2LITTLER/point/*.csv .
+ln -s ${MAINDIR}/input/aws_files/MO2LITTLER/coordinates_data.csv .
 
 ./convert.exe
 
-mkdir -p input/little_r_obs/$YYS$MMS$DDS$HHS
-mv obs_MOstns_r* input/little_r_obs/$YYS$MMS$DDS$HHS
+mkdir -p ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/$YYS$MMS$DDS$HHS
+mv obs_MOstns_r* ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/$YYS$MMS$DDS$HHS
 
 echo "End of aws to little r!"
 echo " *********************** "
 
 # Combine converted AWS data per hour
-DIRAWS=${WRF_MAINDIR}/MO2LITTLER/input/little_r_obs/$YYS$MMS$DDS$HHS
+DIRAWS=${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/$YYS$MMS$DDS$HHS
 cd $DIRAWS
 AWS_LIST=("")
 CDAT=$SDAT
@@ -102,7 +104,7 @@ do
 done
 
 # Combine converted MADIS data per hour
-cd ${WRF_MAINDIR}/MADIS2LITTLER/input/little_r_obs
+cd ${MAINDIR}/input/madis_files/MADIS2LITTLER/little_r_obs
 MADIS_LIST=("")
 CDAT=$SDAT
 while [ "$CDAT" != "$TDAT" ]
@@ -130,12 +132,17 @@ done
 echo "concatenating : " ${FILE_LIST[*]}
 cat $(echo ${FILE_LIST[*]}) > ob_$YYS$MMS$DDS${HHS}.ascii
 
+# Cleanup files and remove redundant observation data for assimilation to free storage space
+rm -rf ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/$YYS$MMS$DDS$HHS # MADIS data from individual sources
+rm ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/obs_* # concatenated MADIS data
+rm ${MAINDIR}/input/aws_files/MO2LITTLER/little_r_obs/obsall_* # concatenated MADIS + AWS data
+
 # -------------------------------------------- #
 #                 Run OBSPROC                  #
 # -------------------------------------------- #
 cd ${WRF_MAINDIR}/WRF3DVar/OBSPROC
 rm ob_$YYS$MMS$DDS${HHS}.ascii
-ln -s ${WRF_MAINDIR}/MADIS2LITTLER/input/little_r_obs/ob_$YYS$MMS$DDS${HHS}.ascii .
+ln -s ${MAINDIR}/input/madis_files/MADIS2LITTLER/little_r_obs/ob_$YYS$MMS$DDS${HHS}.ascii .
 
 # Edit namelist.obsproc
 rm -f namelist.obsproc
