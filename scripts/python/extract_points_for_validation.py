@@ -1,4 +1,6 @@
-# Description: Extract past 5-day
+# Description: Extract fcst at station locations for validation
+# Author: Kevin Henson
+# Last edited: May 26, 2022
 
 from pathlib import Path
 import pandas as pd
