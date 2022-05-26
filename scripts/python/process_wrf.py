@@ -19,6 +19,7 @@ from plot_web_maps import plot_web_maps
 from extract_points import extract_points
 from plot_hi_gauge import plot_gauge
 from extract_acenergy import extract_acenergy
+from extract_points_for_validation import extract_points_for_validation
 from plot_ts_acenergy import plot_ts_ace
 
 omp_set_num_threads(int(os.getenv("SLURM_NTASKS", 4)))
@@ -173,6 +174,11 @@ def main(wrfin, out_dir):
     _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating ts plot for AC Energy solar farms...")
     plot_ts_ace(hr_ds, _out_dir)
+
+    _out_dir = out_dir / "stations_fcst_for_validation/json"
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    print("Creating summary for stations for validation...")
+    extract_points_for_validation({"hr": hr_ds, "day": day_ds}, _out_dir)
 
     print("Saving nc...")
     init_dt = pd.to_datetime(hr_ds.time.values[0])
