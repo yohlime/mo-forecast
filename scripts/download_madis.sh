@@ -4,6 +4,12 @@ echo "------------------------------------------"
 echo " Downloading latest assimilation files... "
 echo "------------------------------------------"
 
+# Set variables
+DL_LIST=$TEMP_DIR/madis_dl_list.txt
+DL_OUT=$TEMP_DIR/madis_dl.out
+DL_LOG_DIR="$LOG_DIR/input/madis_files"
+DL_SPEED_LOG_FILE="${DL_LOG_DIR}/madis_dl_speed_${FCST_YY}${FCST_MM}.log"
+
 # choose window hour (how many hours before or after the initialization time)
 WH=${WINDOW_HOUR}
 # choose which data type to download
@@ -14,13 +20,9 @@ DSOURCE="acars HDW metar maritime raob"
 
 mkdir -p "$TEMP_DIR"
 for j in $DSOURCE; do
-  mkdir -p "$MADISDIR/$j/netcdf"
+  mkdir -p "$MADIS_DIR/$j/netcdf"
 done
-
-# Set variables
-DL_LIST=$TEMP_DIR/madis_dl_list.txt
-DL_OUT=$TEMP_DIR/madis_dl.out
-DL_LOG_FILE="$MAINDIR/input/madis_files/madis_dl_speed.log"
+mkdir -p "$DL_LOG_DIR"
 
 # get start and end of window hours
 SDATE=$(date -d "${FCST_YY}-${FCST_MM}-${FCST_DD} ${FCST_ZZ}:00:00 $((WH)) hours ago" +'%Y-%m-%d %H:%M:%S')
@@ -48,7 +50,7 @@ while [ "$CDATE" != "$EDATE" ]; do
     FILE_NAME="${YY2}${MM2}${DD2}_${HH2}00.gz"
     URL="$BASE_URL/$DIR_SOURCE/$FILE_NAME"
     echo "$URL" >>"$DL_LIST"
-    echo -e "\tdir=$MADISDIR/$j/netcdf" >>"$DL_LIST"
+    echo -e "\tdir=$MADIS_DIR/$j/netcdf" >>"$DL_LIST"
   done
   CDATE=$(date -d "$CDATE 1 hour" +'%Y-%m-%d %H:%M:%S')
   #echo CDATE NEW "$CDATE"
@@ -63,7 +65,7 @@ DATE_STR=$(date +"%Y%m%d,%H")
 DL_STIME=$(date +%s)
 
 # Download
-DL_LOG="$MAINDIR/input/madis_files/madis_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log"
+DL_LOG="${DL_LOG_DIR}/madis_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log"
 aria2c -j5 -x8 -i "$DL_LIST" -l "$DL_LOG" --log-level=notice
 
 # Record end time
@@ -71,11 +73,11 @@ DL_ETIME=$(date +%s)
 # Compute elapsed time in seconds
 DL_DURATION=$((DL_ETIME - DL_STIME))
 # Get total download size
-TOT_SIZE=$(du -sk "$MADISDIR/" | cut -f1)
+TOT_SIZE=$(du -sk "$MADIS_DIR/" | cut -f1)
 # Compute download speed
 DL_SPEED=$(bc <<<"scale=2; ${TOT_SIZE}/${DL_DURATION}")
 # Log Speed
-echo "${DATE_STR},${DL_DURATION},${TOT_SIZE},${DL_SPEED}" >>"$DL_LOG_FILE"
+echo "${DATE_STR},${DL_DURATION},${TOT_SIZE},${DL_SPEED}" >>"$DL_SPEED_LOG_FILE"
 
 # Cleanup
 rm -f "$DL_LIST"
@@ -83,7 +85,7 @@ rm -f "$DL_OUT"
 
 # Unzip
 for j in $DSOURCE; do
-  cd "$MADISDIR/$j/netcdf" || continue
+  cd "$MADIS_DIR/$j/netcdf" || continue
   gzip -d ./*.gz
 done
 

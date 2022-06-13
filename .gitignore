@@ -173,6 +173,7 @@ output
 model
 set_cron_env.sh
 **/.bak
+*.out
 
 scripts/*
 !/scripts/python

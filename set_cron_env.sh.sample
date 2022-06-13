@@ -6,6 +6,10 @@ export MAINDIR=$HOME/forecast
 
 export TEMP_DIR=${MAINDIR}/.tmp
 export SCRIPT_DIR=${MAINDIR}/scripts
+export LOG_DIR=${MAINDIR}/logs
+
+export GFS_BASE_DIR="${MAINDIR}/input/gfs_files"
+export MADIS_BASE_DIR="${MAINDIR}/input/madis_files"
 
 export WRF_POSTDIR=${MAINDIR}/model/ARWpost
 export WPS_GFSDIR=${MAINDIR}/model/WPS/GFS

@@ -4,14 +4,15 @@ echo "---------------------------------"
 echo " Downloading latest GFS files... "
 echo "---------------------------------"
 
-mkdir -p "$GFS_DIR"
-mkdir -p "$TEMP_DIR"
-mkdir -p "$MAINDIR/input/gfs_files"
-
 # Set variables
 DL_LIST=$TEMP_DIR/gfs_dl_list.txt
 DL_OUT=$TEMP_DIR/gfs_dl.out
-DL_LOG_FILE="$MAINDIR/input/gfs_files/gfs_dl_speed.log"
+DL_LOG_DIR="$LOG_DIR/input/gfs_files"
+DL_SPEED_LOG_FILE="${DL_LOG_DIR}/gfs_dl_speed_${FCST_YY}${FCST_MM}.log"
+
+mkdir -p "$GFS_DIR"
+mkdir -p "$TEMP_DIR"
+mkdir -p "$DL_LOG_DIR"
 
 END_TS=$((WRF_FCST_DAYS * 24)) # Last timestep to download
 
@@ -53,7 +54,7 @@ DATE_STR=$(date +"%Y%m%d,%H")
 DL_STIME=$(date +%s)
 
 # Download
-DL_LOG=$MAINDIR/input/gfs_files/gfs_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log
+DL_LOG="${DL_LOG_DIR}/gfs_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log"
 aria2c -j5 -x8 -d "$GFS_DIR" -i "$DL_LIST" -l "$DL_LOG" --log-level=notice
 
 # Record end time
@@ -65,7 +66,7 @@ TOT_SIZE=$(du -sk "$GFS_DIR"/ | cut -f1)
 # Compute download speed
 DL_SPEED=$(bc <<<"scale=2; $TOT_SIZE/$DL_DURATION")
 # Log Speed
-echo "$DATE_STR,$DL_DURATION,$TOT_SIZE,$DL_SPEED" >>"$DL_LOG_FILE"
+echo "$DATE_STR,$DL_DURATION,$TOT_SIZE,$DL_SPEED" >>"$DL_SPEED_LOG_FILE"
 
 # Cleanup
 rm -f "$DL_LIST"
