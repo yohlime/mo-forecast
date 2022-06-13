@@ -41,6 +41,17 @@ echo " Done uploading web files!!! "
 echo "-----------------------------"
 
 echo "--------------------------"
+echo " Uploading files for EHB  "
+echo "--------------------------"
+
+rsubdir="ewb:EHB/resources/model/hi_gauge/$YY2$mm2$dd2/$HH2"
+rclone copy "$SRCDIR/hi_gauge/img/$YY$mm$dd${FCST_ZZ}" "$rsubdir"
+
+echo "-----------------------------"
+echo " Done uploading EHB files!!! "
+echo "-----------------------------"
+
+echo "--------------------------"
 echo " Uploading files for ACEN  "
 echo "--------------------------"
 
