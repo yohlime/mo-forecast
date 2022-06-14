@@ -51,7 +51,7 @@ echo " Starting WRF Forecast "
 echo "-----------------------"
 
 # Cancel any previous slurm jobs
-hn=`echo $HOSTNAME | cut -d . -f 1`
+hn=$(echo $HOSTNAME | cut -d . -f 1)
 scancel --user=modelman --partition=${hn}
 
 source "$SCRIPT_DIR/set_date_vars.sh"
