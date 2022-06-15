@@ -1,0 +1,1 @@
+run_madis_to_little_r_stat.ksh

@@ -17,7 +17,7 @@ git clone http://rcs.observatory.ph/git/egozo/mo_forecast.git ~/forecast
 ### 2. Install conda environment
 ```
 cd ~/forecast
-conda create -f conda.yaml -p ./.conda
+conda create -f venv.yaml -p ./venv
 ```
 
 ### 3. Create a configuration file

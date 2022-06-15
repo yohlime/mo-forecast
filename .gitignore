@@ -165,7 +165,6 @@ Thumbs.db
 # End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks
 
 .vscode/
-.conda/
 
 .tmp/
 input
@@ -175,8 +174,7 @@ set_cron_env.sh
 **/.bak
 *.out
 
-scripts/
-!/scripts/python
+scripts/grads/
 
 climatology/
 validation/
