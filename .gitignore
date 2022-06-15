@@ -175,7 +175,7 @@ set_cron_env.sh
 **/.bak
 *.out
 
-scripts/*
+scripts/
 !/scripts/python
 
 climatology/
