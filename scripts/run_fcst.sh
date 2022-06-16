@@ -5,7 +5,7 @@ DOWNLOAD_INPUT=1
 DOWNLOAD_MADIS=1
 UPLOAD_OUTPUT=1
 POST_PROCESS=1
-SLURM_OPTS0="--parsable -A $SLURM_ACCOUNT -p $SLURM_PARTITION -N $SLURM_NUM_NODES"
+SLURM_OPTS0=("--parsable" "-A" "$SLURM_ACCOUNT" "-p" "$SLURM_PARTITION" "-N" "$SLURM_NUM_NODES")
 ###################################################
 
 #################### FUNCTIONS ####################
@@ -81,11 +81,12 @@ fi
 # WPS
 mkdir -p "$MODEL_LOG_DIR/wps"
 wps_log_file="$MODEL_LOG_DIR/wps/wps_$FCST_YYYYMMDD$FCST_ZZ.out"
-slurm_opts="$SLURM_OPTS0"
-slurm_opts+=" -J wps-$FCST_YYYYMMDD$FCST_ZZ"
-slurm_opts+=" -o $wps_log_file"
-slurm_opts+=" -n $SLURM_WPS_NTASKS"
-prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_wps.sh")
+slurm_opts=("${SLURM_OPTS0[@]}")
+slurm_opts+=("-J" "wps-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-o" "$wps_log_file")
+slurm_opts+=("-n" "$SLURM_WPS_NTASKS")
+slurm_opts+=("$SCRIPT_DIR/run_wps.sh")
+prev_jid=$(sbatch "${slurm_opts[@]}")
 
 # WRF
 # schedule multiple slurm WRF jobs based on WRF_RUN_NAMES
@@ -102,13 +103,14 @@ for run_name in "${run_names[@]}"; do
   WRF_NTASKS=$SLURM_WRF_NTASKS
   mkdir -p "$MODEL_LOG_DIR/wrf"
   wrf_log_file="$MODEL_LOG_DIR/wrf/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
-  slurm_opts="$SLURM_OPTS0"
-  slurm_opts+=" -d afterany:$prev_jid"
-  slurm_opts+=" -J wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
-  slurm_opts+=" -o $wrf_log_file"
-  slurm_opts+=" -n $WRF_NTASKS"
-  slurm_opts+=" -c $SLURM_WRF_CPUS_PER_TASK"
-  prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_wrf.sh")
+  slurm_opts=("${SLURM_OPTS0[@]}")
+  slurm_opts+=("-d" "afterany:$prev_jid")
+  slurm_opts+=("-J" "wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
+  slurm_opts+=("-o" "$wrf_log_file")
+  slurm_opts+=("-n" "$WRF_NTASKS")
+  slurm_opts+=("-c" "$SLURM_WRF_CPUS_PER_TASK")
+  slurm_opts+=("$SCRIPT_DIR/run_wrf.sh")
+  prev_jid=$(sbatch "${slurm_opts[@]}")
 
   run_idx=$((run_idx + 1))
 done
@@ -118,23 +120,25 @@ if [ $POST_PROCESS -eq 1 ]; then
 
   ### Python Post processing
   log_file="$POST_LOG_DIR/python_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.log"
-  slurm_opts="$SLURM_OPTS0"
-  slurm_opts+=" -d afterany:$prev_jid"
-  slurm_opts+=" -J python-$FCST_YYYYMMDD$FCST_ZZ"
-  slurm_opts+=" -o $log_file"
-  slurm_opts+=" -n 12"
-  prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/postproc_python.sh")
+  slurm_opts=("${SLURM_OPTS0[@]}")
+  slurm_opts+=("-d" "afterany:$prev_jid")
+  slurm_opts+=("-J" "python-$FCST_YYYYMMDD$FCST_ZZ")
+  slurm_opts+=("-o" "$log_file")
+  slurm_opts+=("-n" "12")
+  slurm_opts+=("$SCRIPT_DIR/postproc_python.sh")
+  prev_jid=$(sbatch "${slurm_opts[@]}")
 
   if [ $UPLOAD_OUTPUT -eq 1 ]; then
     ### Web Upload
     mkdir -p "$POST_LOG_DIR/upload"
     log_file="$POST_LOG_DIR/upload/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log"
-    slurm_opts="$SLURM_OPTS0"
-    slurm_opts+=" -d afterany:$prev_jid"
-    slurm_opts+=" -J web-upload-$FCST_YYYYMMDD$FCST_ZZ"
-    slurm_opts+=" -o $log_file"
-    slurm_opts+=" -n 1"
-    prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/web_upload.sh")
+    slurm_opts=("${SLURM_OPTS0[@]}")
+    slurm_opts+=("-d" "afterany:$prev_jid")
+    slurm_opts+=("-J" "web-upload-$FCST_YYYYMMDD$FCST_ZZ")
+    slurm_opts+=("-o" "$log_file")
+    slurm_opts+=("-n" "1")
+    slurm_opts+=("$SCRIPT_DIR/web_upload.sh")
+    prev_jid=$(sbatch "${slurm_opts[@]}")
   fi
 
   ### ARWpost
@@ -146,12 +150,13 @@ if [ $POST_PROCESS -eq 1 ]; then
 
     mkdir -p "$POST_LOG_DIR/arw"
     arw_log_file="$POST_LOG_DIR/arw/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
-    slurm_opts="$SLURM_OPTS0"
-    slurm_opts+=" -d afterany:$prev_jid"
-    slurm_opts+=" -J arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}"
-    slurm_opts+=" -o $arw_log_file"
-    slurm_opts+=" -n 1"
-    prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_arwpost.sh")
+    slurm_opts=("${SLURM_OPTS0[@]}")
+    slurm_opts+=("-d" "afterany:$prev_jid")
+    slurm_opts+=("-J" "arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
+    slurm_opts+=("-o" "$arw_log_file")
+    slurm_opts+=("-n" "1")
+    slurm_opts+=("$SCRIPT_DIR/run_arwpost.sh")
+    prev_jid=$(sbatch "${slurm_opts[@]}")
 
     run_idx=$((run_idx + 1))
   done
@@ -159,10 +164,11 @@ if [ $POST_PROCESS -eq 1 ]; then
   ### ENSEMBLE Post processing
   mkdir -p "$POST_LOG_DIR/ens"
   ens_log_file="$POST_LOG_DIR/ens/ens_$FCST_YYYYMMDD$FCST_ZZ.out"
-  slurm_opts="$SLURM_OPTS0"
-  slurm_opts+=" -d afterany:$prev_jid"
-  slurm_opts+=" -J ens-$FCST_YYYYMMDD$FCST_ZZ"
-  slurm_opts+=" -o $ens_log_file"
-  slurm_opts+=" -n 1"
-  prev_jid=$(sbatch $slurm_opts "$SCRIPT_DIR/run_post_ens.sh")
+  slurm_opts=("${SLURM_OPTS0[@]}")
+  slurm_opts+=("-d" "afterany:$prev_jid")
+  slurm_opts+=("-J" "ens-$FCST_YYYYMMDD$FCST_ZZ")
+  slurm_opts+=("-o" "$ens_log_file")
+  slurm_opts+=("-n" "1")
+  slurm_opts+=("$SCRIPT_DIR/run_post_ens.sh")
+  prev_jid=$(sbatch "${slurm_opts[@]}")
 fi
