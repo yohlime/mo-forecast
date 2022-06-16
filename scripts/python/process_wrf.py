@@ -12,7 +12,7 @@ import pytz
 from wrf import omp_set_num_threads, omp_get_max_threads
 
 from __const__ import wrf_dirs, wrf_forecast_days
-from __helper__ import wrf_getvar
+from helpers.wrf import wrf_getvar
 from plot_maps import plot_maps
 from plot_ts import plot_timeseries
 from plot_web_maps import plot_web_maps
