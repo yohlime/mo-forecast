@@ -57,9 +57,11 @@ scancel --user=modelman --partition=${hn}
 source "$SCRIPT_DIR/set_date_vars.sh"
 MODEL_LOG_DIR="$LOG_DIR/model"
 POST_LOG_DIR="$LOG_DIR/post"
+export ERROR_FILE=$TEMP_DIR/error.txt
 
 mkdir -p "$MODEL_LOG_DIR"
 mkdir -p "$POST_LOG_DIR"
+rm -f "$ERROR_FILE"
 
 if [ $DOWNLOAD_INPUT -eq 1 ]; then
   # download GFS
@@ -74,7 +76,9 @@ fi
 NUM_TIMESTEPS=$((WRF_FCST_DAYS * 24 + 1))
 GFS_FILES=("$GFS_DIR"/*.grb)
 if [ ${#GFS_FILES[@]} -ne $NUM_TIMESTEPS ]; then
-  echo "number of GFS Files: ${#GFS_FILES[@]}, expected: $NUM_TIMESTEPS"
+  err_msg="number of GFS Files: ${#GFS_FILES[@]}, expected: $NUM_TIMESTEPS"
+  echo "$err_msg" >"$ERROR_FILE"
+  echo "$err_msg"
   exit 1
 fi
 
@@ -172,3 +176,14 @@ if [ $POST_PROCESS -eq 1 ]; then
   slurm_opts+=("$SCRIPT_DIR/run_post_ens.sh")
   prev_jid=$(sbatch "${slurm_opts[@]}")
 fi
+
+### Notifier
+mkdir -p "$POST_LOG_DIR/alert"
+log_file="$POST_LOG_DIR/alert/alert_$FCST_YYYYMMDD$FCST_ZZ.log"
+slurm_opts=("${SLURM_OPTS0[@]}")
+slurm_opts+=("-d" "afterany:$prev_jid")
+slurm_opts+=("-J" "alert-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-o" "$log_file")
+slurm_opts+=("-n" "1")
+slurm_opts+=("$SCRIPT_DIR/send_alert.sh")
+prev_jid=$(sbatch "${slurm_opts[@]}")

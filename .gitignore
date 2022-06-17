@@ -176,6 +176,7 @@ set_cron_env.sh
 *.out
 
 scripts/grads/
+scripts/python/config/*.json
 
 climatology/
 validation/

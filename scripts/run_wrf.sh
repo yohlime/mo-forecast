@@ -10,7 +10,9 @@ rm met_em.d0*
 NUM_TIMESTEPS=$((WRF_FCST_DAYS * 24 + 1))
 MET_EM_FILES=("$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF"/met_em.d0*)
 if [ ${#MET_EM_FILES[@]} -ne $NUM_TIMESTEPS ]; then
-  echo "number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
+  err_msg="number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
+  echo "$err_msg" >>"$ERROR_FILE"
+  echo "$err_msg"
   exit 1
 fi
 

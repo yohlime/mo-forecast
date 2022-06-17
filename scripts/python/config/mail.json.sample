@@ -1,0 +1,7 @@
+{
+    "subject": "[Alert]",
+    "to": [
+        "username1@host.com",
+        "username2@host.com"
+    ]
+}

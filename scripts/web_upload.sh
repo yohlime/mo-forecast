@@ -15,7 +15,10 @@ SRCDIR=${OUTDIR}
 
 IMGS=("$SRCDIR/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png")
 if [ ${#IMGS[@]} -eq 1 ]; then
-    exit 1
+  err_msg="No files to upload"
+  echo "$err_msg" >>"$ERROR_FILE"
+  echo "$err_msg"
+  exit 1
 fi
 
 cat <<EOF >"$SRCDIR/info.json"
