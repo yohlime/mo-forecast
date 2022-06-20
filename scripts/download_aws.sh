@@ -20,7 +20,7 @@ mkdir -p "$DL_LOG_DIR"
 SDATE=$(date -d "${FCST_YY}-${FCST_MM}-${FCST_DD} ${FCST_ZZ}:00:00 10 hours ago" +'%Y-%m-%d %H:%M:%S')
 
 # URL Download AWS via website
-NOW_DIR="https://panahon.observatory.ph/api/stations.php?24hr\&type=csv"
+NOW_DIR=https://panahon.observatory.ph/api/stations.php?24hr\&type=csv
 
 # Create download list
 touch "${DL_LIST}"
@@ -45,7 +45,7 @@ DL_STIME=$(date +%s)
 # Download
 DL_LOG="${DL_LOG_DIR}/aws_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log"
 #aria2c -i ${DL_LIST} -o ${FILE_NAME} -l ${DL_LOG}
-aria2c "$URL" -o "$FILE_NAME" -l "$DL_LOG" --log-level=notice
+aria2c $URL -o "$FILE_NAME" -l "$DL_LOG" --log-level=notice
 
 # Record end time
 DL_ETIME=$(date +%s)
