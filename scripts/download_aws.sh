@@ -45,7 +45,7 @@ DL_STIME=$(date +%s)
 # Download
 DL_LOG="${DL_LOG_DIR}/aws_dload_${FCST_YYYYMMDD}${FCST_ZZ}.log"
 #aria2c -i ${DL_LIST} -o ${FILE_NAME} -l ${DL_LOG}
-aria2c $URL -o "$FILE_NAME" -l "$DL_LOG" --log-level=notice
+aria2c "$URL" -o "$FILE_NAME" -l "$DL_LOG" --log-level=notice
 
 # Record end time
 DL_ETIME=$(date +%s)
