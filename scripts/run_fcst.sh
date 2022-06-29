@@ -74,6 +74,7 @@ GFS_FILES=("$GFS_DIR"/*.grb)
 if [ ${#GFS_FILES[@]} -ne $NUM_TIMESTEPS ]; then
   err_msg="number of GFS Files: ${#GFS_FILES[@]}, expected: $NUM_TIMESTEPS"
   echo "$err_msg" >"$ERROR_FILE"
+  source "$SCRIPT_DIR/send_alert.sh"
   echo "$err_msg"
   exit 1
 fi
