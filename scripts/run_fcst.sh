@@ -71,6 +71,16 @@ fi
 
 NUM_TIMESTEPS=$((WRF_FCST_DAYS * 24 + 1))
 GFS_FILES=("$GFS_DIR"/*.grb)
+
+# Redownload GFS files if incomplete
+if [ ${#GFS_FILES[@]} -ne $NUM_TIMESTEPS ]; then
+  echo "GFS files incomplete, redownloading.."
+  sleep 5m # allowance in case of internet disconnection/server overload
+  source "$SCRIPT_DIR/download_gfs.sh"
+fi
+
+# Send notifier if GFS files still incomplete
+GFS_FILES=("$GFS_DIR"/*.grb)
 if [ ${#GFS_FILES[@]} -ne $NUM_TIMESTEPS ]; then
   err_msg="number of GFS Files: ${#GFS_FILES[@]}, expected: $NUM_TIMESTEPS"
   echo "$err_msg" >"$ERROR_FILE"
