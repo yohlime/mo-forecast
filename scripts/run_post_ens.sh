@@ -111,14 +111,27 @@ read FCST_YY_R FCST_MM_R FCST_DD_R FCST_HH_R <<< ${DATE_STRR//[-_]/ }
 WEEK_AGO="${FCST_YY_R}-${FCST_MM_R}-${FCST_DD_R}_${FCST_HH_R}"
 
 echo " Removing files from ${WEEK_AGO} (1 week ago): "
-echo " ${WRF_NAMELIST_SUFF1}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain "
-echo " ${WRF_NAMELIST_SUFF2}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain "
-echo " ${WRF_NAMELIST_SUFF3}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain "
-echo " wrf_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R} log files "
+
+IFS=':' read -ra run_names <<<"$WRF_RUN_NAMES"
+
+for run_name in "${run_names[@]}"; do 
+  
+  # wrfout files
+  echo "${WRF_REALDIR}/${run_name}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain"
+  rm ${WRF_REALDIR}/${run_name}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain 
+
+  # ARWpost files
+  echo "${WRF_POSTDIR}/${run_name}/wrffcst_d01_${WEEK_AGO} "
+  rm ${WRF_POSTDIR}/${run_name}/wrffcst_d01_${WEEK_AGO}.*
+
+  # Ensemble files
+  echo "${WRF_ENS}/${run_name}/wrffcst_d01_${WEEK_AGO} "
+  rm ${WRF_ENS}/${run_name}/wrffcst_d01_${WEEK_AGO}.*
+  
+done
+
 # wrfout files
-rm -f ${WRF_REALDIR}/${WRF_NAMELIST_SUFF1}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain
-rm -f ${WRF_REALDIR}/${WRF_NAMELIST_SUFF2}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain
-rm -f ${WRF_REALDIR}/${WRF_NAMELIST_SUFF3}/wrfout_d01_${WEEK_AGO}_00_00_${WRF_FCST_DAYS}-day_fcst_rain
+echo " wrf_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R} log files "
 rm -f ${WRF_REALDIR}/wrf_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R}_run*.log
 
 echo " wrffcst_d01_${WEEK_AGO}_ens.nc "
@@ -127,14 +140,8 @@ echo " ens_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R}.out "
 rm -f ${WRF_ENS}/wrffcst_d01_${WEEK_AGO}_ens.nc
 rm -f ${WRF_ENS}/ens_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R}.out
 
-echo " ${WRF_NAMELIST_SUFF1}/wrffcst_d01_${WEEK_AGO} "
-echo " ${WRF_NAMELIST_SUFF2}/wrffcst_d01_${WEEK_AGO} "
-echo " ${WRF_NAMELIST_SUFF3}/wrffcst_d01_${WEEK_AGO} "
 echo " arw_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R} log files "
 # ARWpost files
-rm -f ${WRF_POSTDIR}/${WRF_NAMELIST_SUFF1}/wrffcst_d01_${WEEK_AGO}.*
-rm -f ${WRF_POSTDIR}/${WRF_NAMELIST_SUFF2}/wrffcst_d01_${WEEK_AGO}.*
-rm -f ${WRF_POSTDIR}/${WRF_NAMELIST_SUFF3}/wrffcst_d01_${WEEK_AGO}.*
 rm -f ${WRF_REALDIR}/arw_${FCST_YY_R}${FCST_MM_R}${FCST_DD_R}${FCST_HH_R}_run*.out
 
 #cd ${WRF_REALDIR}
