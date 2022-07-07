@@ -184,17 +184,6 @@ if [ $POST_PROCESS -eq 1 ]; then
   prev_jid=$(sbatch "${slurm_opts[@]}")
 fi
 
-### Notifier
-mkdir -p "$POST_LOG_DIR/alert"
-log_file="$POST_LOG_DIR/alert/alert_$FCST_YYYYMMDD$FCST_ZZ.log"
-slurm_opts=("${SLURM_OPTS0[@]}")
-slurm_opts+=("-d" "afterany:$prev_jid")
-slurm_opts+=("-J" "alert-$FCST_YYYYMMDD$FCST_ZZ")
-slurm_opts+=("-o" "$log_file")
-slurm_opts+=("-n" "1")
-slurm_opts+=("$SCRIPT_DIR/send_alert.sh")
-prev_jid=$(sbatch "${slurm_opts[@]}")
-
 ### EWB Quicklook plots
 mkdir -p "$POST_LOG_DIR/ewb"
 log_file="$POST_LOG_DIR/ewb/ewb_$FCST_YYYYMMDD$FCST_ZZ.log"
@@ -204,4 +193,15 @@ slurm_opts+=("-J" "ewb-$FCST_YYYYMMDD$FCST_ZZ")
 slurm_opts+=("-o" "$log_file")
 slurm_opts+=("-n" "1")
 slurm_opts+=("$SCRIPT_DIR/run_ewb_quicklook.sh")
+prev_jid=$(sbatch "${slurm_opts[@]}")
+
+### Notifier
+mkdir -p "$POST_LOG_DIR/alert"
+log_file="$POST_LOG_DIR/alert/alert_$FCST_YYYYMMDD$FCST_ZZ.log"
+slurm_opts=("${SLURM_OPTS0[@]}")
+slurm_opts+=("-d" "afterany:$prev_jid")
+slurm_opts+=("-J" "alert-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-o" "$log_file")
+slurm_opts+=("-n" "1")
+slurm_opts+=("$SCRIPT_DIR/send_alert.sh")
 prev_jid=$(sbatch "${slurm_opts[@]}")
