@@ -47,9 +47,9 @@ done
 ###################################################
 
 # Cancel any jobs from previous cycle
-job_list=$(squeue -u $SLURM_USER -p $SLURM_PARTITION --format="%i %j" | grep ecw | awk '{print $1}')
-if [ ! -z "$job_list" ];then 
-  scancel $job_list
+job_list=$(squeue -u "$SLURM_USER" -p "$SLURM_PARTITION" --format="%i %j" | grep ecw | awk '{print $1}')
+if [ -n "$job_list" ]; then
+  scancel "$job_list"
 fi
 
 echo "-----------------------"
