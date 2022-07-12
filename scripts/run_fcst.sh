@@ -46,6 +46,12 @@ while [ -n "$1" ]; do
 done
 ###################################################
 
+# Cancel any jobs from previous cycle
+job_list=$(squeue -u $SLURM_USER -p $SLURM_PARTITION --format="%i %j" | grep ecw | awk '{print $1}')
+if [ ! -z "$job_list" ];then 
+  scancel $job_list
+fi
+
 echo "-----------------------"
 echo " Starting WRF Forecast "
 echo "-----------------------"
@@ -93,7 +99,7 @@ fi
 mkdir -p "$MODEL_LOG_DIR/wps"
 wps_log_file="$MODEL_LOG_DIR/wps/wps_$FCST_YYYYMMDD$FCST_ZZ.out"
 slurm_opts=("${SLURM_OPTS0[@]}")
-slurm_opts+=("-J" "wps-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-J" "ecw_wps-$FCST_YYYYMMDD$FCST_ZZ")
 slurm_opts+=("-o" "$wps_log_file")
 slurm_opts+=("-n" "$SLURM_WPS_NTASKS")
 slurm_opts+=("$SCRIPT_DIR/run_wps.sh")
@@ -116,7 +122,7 @@ for run_name in "${run_names[@]}"; do
   wrf_log_file="$MODEL_LOG_DIR/wrf/wrf_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
   slurm_opts=("${SLURM_OPTS0[@]}")
   slurm_opts+=("-d" "afterany:$prev_jid")
-  slurm_opts+=("-J" "wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
+  slurm_opts+=("-J" "ecw_wrf-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
   slurm_opts+=("-o" "$wrf_log_file")
   slurm_opts+=("-n" "$WRF_NTASKS")
   slurm_opts+=("-c" "$SLURM_WRF_CPUS_PER_TASK")
@@ -133,7 +139,7 @@ if [ $POST_PROCESS -eq 1 ]; then
   log_file="$POST_LOG_DIR/python_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.log"
   slurm_opts=("${SLURM_OPTS0[@]}")
   slurm_opts+=("-d" "afterany:$prev_jid")
-  slurm_opts+=("-J" "python-$FCST_YYYYMMDD$FCST_ZZ")
+  slurm_opts+=("-J" "ecw_python-$FCST_YYYYMMDD$FCST_ZZ")
   slurm_opts+=("-o" "$log_file")
   slurm_opts+=("-n" "12")
   slurm_opts+=("$SCRIPT_DIR/postproc_python.sh")
@@ -145,7 +151,7 @@ if [ $POST_PROCESS -eq 1 ]; then
     log_file="$POST_LOG_DIR/upload/web-upload_$FCST_YYYYMMDD$FCST_ZZ.log"
     slurm_opts=("${SLURM_OPTS0[@]}")
     slurm_opts+=("-d" "afterany:$prev_jid")
-    slurm_opts+=("-J" "web-upload-$FCST_YYYYMMDD$FCST_ZZ")
+    slurm_opts+=("-J" "ecw_web-upload-$FCST_YYYYMMDD$FCST_ZZ")
     slurm_opts+=("-o" "$log_file")
     slurm_opts+=("-n" "1")
     slurm_opts+=("$SCRIPT_DIR/web_upload.sh")
@@ -163,7 +169,7 @@ if [ $POST_PROCESS -eq 1 ]; then
     arw_log_file="$POST_LOG_DIR/arw/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
     slurm_opts=("${SLURM_OPTS0[@]}")
     slurm_opts+=("-d" "afterany:$prev_jid")
-    slurm_opts+=("-J" "arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
+    slurm_opts+=("-J" "ecw_arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
     slurm_opts+=("-o" "$arw_log_file")
     slurm_opts+=("-n" "1")
     slurm_opts+=("$SCRIPT_DIR/run_arwpost.sh")
@@ -177,7 +183,7 @@ if [ $POST_PROCESS -eq 1 ]; then
   ens_log_file="$POST_LOG_DIR/ens/ens_$FCST_YYYYMMDD$FCST_ZZ.out"
   slurm_opts=("${SLURM_OPTS0[@]}")
   slurm_opts+=("-d" "afterany:$prev_jid")
-  slurm_opts+=("-J" "ens-$FCST_YYYYMMDD$FCST_ZZ")
+  slurm_opts+=("-J" "ecw_ens-$FCST_YYYYMMDD$FCST_ZZ")
   slurm_opts+=("-o" "$ens_log_file")
   slurm_opts+=("-n" "1")
   slurm_opts+=("$SCRIPT_DIR/run_post_ens.sh")
@@ -189,7 +195,7 @@ mkdir -p "$POST_LOG_DIR/ewb"
 log_file="$POST_LOG_DIR/ewb/ewb_$FCST_YYYYMMDD$FCST_ZZ.log"
 slurm_opts=("${SLURM_OPTS0[@]}")
 slurm_opts+=("-d" "afterany:$prev_jid")
-slurm_opts+=("-J" "ewb-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-J" "ecw_ewb-$FCST_YYYYMMDD$FCST_ZZ")
 slurm_opts+=("-o" "$log_file")
 slurm_opts+=("-n" "1")
 slurm_opts+=("$SCRIPT_DIR/run_ewb_quicklook.sh")
@@ -200,7 +206,7 @@ mkdir -p "$POST_LOG_DIR/alert"
 log_file="$POST_LOG_DIR/alert/alert_$FCST_YYYYMMDD$FCST_ZZ.log"
 slurm_opts=("${SLURM_OPTS0[@]}")
 slurm_opts+=("-d" "afterany:$prev_jid")
-slurm_opts+=("-J" "alert-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-J" "ecw_alert-$FCST_YYYYMMDD$FCST_ZZ")
 slurm_opts+=("-o" "$log_file")
 slurm_opts+=("-n" "1")
 slurm_opts+=("$SCRIPT_DIR/send_alert.sh")

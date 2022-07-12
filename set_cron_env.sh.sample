@@ -31,6 +31,7 @@ export SLURM_WRF_NTASKS2=96
 export SLURM_PARTITION=dugong
 export SLURM_NUM_NODES=1
 export SLURM_ACCOUNT=rcs
+export SLURM_USER=modelman
 export SLURM_WRF_CPUS_PER_TASK=1
 
 export OUTDIR=${MAINDIR}/output
