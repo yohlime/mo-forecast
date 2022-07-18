@@ -25,6 +25,12 @@ export NAMELIST_SUFF=mowcr_solar
 export WPS_NAMELIST_SUFF=mowcr_solar
 export WRF_RUN_NAMES=mowcr_solar_run1:mowcr_solar_run2:mowcr_solar_run3
 
+# for WRFDA
+export WRFDA_RUN_NAMES=3DVar_run1:3DVar_run2:3DVar_run3
+export WINDOW_HOUR=3
+export AWS_DIR=${MAINDIR}/input/aws_files
+# end for WRFDA
+
 export SLURM_WPS_NTASKS=6
 export SLURM_WRF_NTASKS=96
 export SLURM_WRF_NTASKS2=96
