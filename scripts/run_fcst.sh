@@ -157,37 +157,6 @@ if [ $POST_PROCESS -eq 1 ]; then
     slurm_opts+=("$SCRIPT_DIR/web_upload.sh")
     prev_jid=$(sbatch "${slurm_opts[@]}")
   fi
-
-  ### ARWpost
-  ### schedule multiple slurm ARWpost jobs based on WRF_RUN_NAMES
-  IFS=':' read -ra run_names <<<"$WRF_RUN_NAMES"
-  run_idx=1
-  for run_name in "${run_names[@]}"; do
-    export NAMELIST_RUN=$run_name
-
-    mkdir -p "$POST_LOG_DIR/arw"
-    arw_log_file="$POST_LOG_DIR/arw/arw_$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}.out"
-    slurm_opts=("${SLURM_OPTS0[@]}")
-    slurm_opts+=("-d" "afterany:$prev_jid")
-    slurm_opts+=("-J" "ecw_arw-$FCST_YYYYMMDD${FCST_ZZ}_run${run_idx}")
-    slurm_opts+=("-o" "$arw_log_file")
-    slurm_opts+=("-n" "1")
-    slurm_opts+=("$SCRIPT_DIR/run_arwpost.sh")
-    prev_jid=$(sbatch "${slurm_opts[@]}")
-
-    run_idx=$((run_idx + 1))
-  done
-
-  ### ENSEMBLE Post processing
-  mkdir -p "$POST_LOG_DIR/ens"
-  ens_log_file="$POST_LOG_DIR/ens/ens_$FCST_YYYYMMDD$FCST_ZZ.out"
-  slurm_opts=("${SLURM_OPTS0[@]}")
-  slurm_opts+=("-d" "afterany:$prev_jid")
-  slurm_opts+=("-J" "ecw_ens-$FCST_YYYYMMDD$FCST_ZZ")
-  slurm_opts+=("-o" "$ens_log_file")
-  slurm_opts+=("-n" "1")
-  slurm_opts+=("$SCRIPT_DIR/run_post_ens.sh")
-  prev_jid=$(sbatch "${slurm_opts[@]}")
 fi
 
 ### EWB Quicklook plots

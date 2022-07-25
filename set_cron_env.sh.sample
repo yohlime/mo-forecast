@@ -11,11 +11,9 @@ export LOG_DIR=${MAINDIR}/logs
 export GFS_BASE_DIR="${MAINDIR}/input/gfs_files"
 export MADIS_BASE_DIR="${MAINDIR}/input/madis_files"
 
-export WRF_POSTDIR=${MAINDIR}/model/ARWpost
 export WPS_GFSDIR=${MAINDIR}/model/WPS/GFS
 export WRF_MAINDIR=${MAINDIR}/model
 export WRF_REALDIR=${MAINDIR}/model/WRF
-export WRF_ENS=${MAINDIR}/model/ENSEMBLE
 
 export WRF_MODE=3dvar # optional, possible values: 3dvar
 
@@ -24,6 +22,12 @@ export WRF_FCST_DAYS=5
 export NAMELIST_SUFF=mowcr_solar
 export WPS_NAMELIST_SUFF=mowcr_solar
 export WRF_RUN_NAMES=mowcr_solar_run1:mowcr_solar_run2:mowcr_solar_run3
+
+# for WRFDA
+export WRFDA_RUN_NAMES=3DVar_run1:3DVar_run2:3DVar_run3
+export WINDOW_HOUR=3
+export AWS_DIR=${MAINDIR}/input/aws_files
+# end for WRFDA
 
 export SLURM_WPS_NTASKS=6
 export SLURM_WRF_NTASKS=96
