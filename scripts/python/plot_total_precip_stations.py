@@ -1,8 +1,7 @@
 # Description: Plot n-day total precipitation for extreme weather bulletin
 # Author: Kevin Henson
-# Last edited: July 25, 2022
+# Last edited: July 26, 2022
 
-from mmap import mmap
 import matplotlib.pyplot as plt
 import datetime as dt
 import cartopy.crs as ccrs
@@ -75,6 +74,7 @@ def plot_total_rain(days, outdir):
     lat = df_sum["lat"]
     pr = df_sum["rr"]
 
+    # Plot station data
     cs = ax.scatter(
         lon,
         lat,
@@ -101,8 +101,8 @@ def plot_total_rain(days, outdir):
     plt.close("all")
 
 if __name__ == "__main__":
-    # today = dt.date.today()
-    today = dt.date(2022, 6, 5) # for testing
+    today = dt.date.today()
+    # today = dt.date(2022, 6, 5) # for testing
 
     aws_dir = "/home/modelman/forecast/input/aws_files/"
     shp_dir = "resources/ph_adm_shp/"
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     # Read shape file
     reader = shpreader.Reader(f'{shp_dir}PHL_adm2.shp')
     # mm = [country for country in reader.records() if country.attributes["NAME_LONG"] == "Kenya"][0]
-    provinces = ["Metropolitan Manila","Rizal","Bulacan","Cavite"]
+    provinces = ["Metropolitan Manila","Rizal","Bulacan","Cavite","Laguna"]
     mm = [muni for muni in reader.records() if muni.attributes["NAME_1"] in provinces]
 
     # color map
