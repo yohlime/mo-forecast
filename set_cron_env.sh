@@ -15,10 +15,13 @@ export WPS_GFSDIR=${MAINDIR}/model/WPS/GFS
 export WRF_MAINDIR=${MAINDIR}/model
 export WRF_REALDIR=${MAINDIR}/model/WRF
 
-export WRF_MODE=3dvar # optional, possible values: 3dvar
+export WRF_MODE=3dvar
 
 export WRFRES=5
 export WRF_FCST_DAYS=5
+# export NAMELIST_SUFF=cmpXfcst25-5km
+# export NAMELIST_SUFF=wcr_luzon
+# export NAMELIST_SUFF=mowcr_D1
 export NAMELIST_SUFF=mowcr_solar
 export WPS_NAMELIST_SUFF=mowcr_solar
 export WRF_RUN_NAMES=mowcr_solar_run1:mowcr_solar_run2:mowcr_solar_run3
@@ -31,8 +34,10 @@ export AWS_DIR=${MAINDIR}/input/aws_files
 
 export SLURM_WPS_NTASKS=6
 export SLURM_WRF_NTASKS=96
+#export SLURM_WRF_NTASKS=72
 export SLURM_WRF_NTASKS2=96
-export SLURM_PARTITION=dugong
+hn=$(hostname -s)
+export SLURM_PARTITION=$hn
 export SLURM_NUM_NODES=1
 export SLURM_ACCOUNT=rcs
 export SLURM_USER=modelman
@@ -50,5 +55,5 @@ export MPLBACKEND="agg"
 export PYTHONPATH=${SCRIPT_DIR}/python:${PYTHONPATH}
 export PYTHON=${CONDA_PREFIX}/bin/python
 
-export MAIL_USERNAME=
-export MAIL_PASSWORD=
+export VAL_DIR=$MAINDIR/validation
+export GSMAP_NC_DIR=${VAL_DIR}/input/gsmap
