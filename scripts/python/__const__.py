@@ -4,6 +4,7 @@ import pytz
 from pathlib import Path
 from salem import open_xr_dataset
 from cartopy import crs as ccrs
+import matplotlib.colors as mcolors
 
 import seaborn as sns
 
@@ -220,3 +221,23 @@ plot_vars_web = {
         ),
     },
 }
+
+# color map
+clevs = [0, 10, 20, 60, 100, 200, 300, 400, 500, 600, 700, 1000]
+cmap_data = [
+    (1.0, 1.0, 1.0),
+    (0.3137255012989044, 0.8156862854957581, 0.8156862854957581),
+    (0.0, 1.0, 1.0),
+    (0.0, 0.8784313797950745, 0.501960813999176),
+    (0.0, 0.7529411911964417, 0.0),
+    (0.501960813999176, 0.8784313797950745, 0.0),
+    (1.0, 1.0, 0.0),
+    (1.0, 0.6274510025978088, 0.0),
+    (1.0, 0.0, 0.0),
+    (1.0, 0.125490203499794, 0.501960813999176),
+    (0.9411764740943909, 0.250980406999588, 1.0),
+    (0.501960813999176, 0.125490203499794, 1.0),
+]
+
+cmap_ewb = mcolors.ListedColormap(cmap_data, "precipitation")
+norm_ewb = mcolors.BoundaryNorm(clevs, cmap_ewb.N)

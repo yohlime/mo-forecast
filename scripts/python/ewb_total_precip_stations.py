@@ -8,12 +8,18 @@ import cartopy.crs as ccrs
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import matplotlib.colors as mcolors
 import cartopy.io.shapereader as shpreader
 from cartopy.feature import ShapelyFeature
+import os
+from __const__ import cmap_ewb, norm_ewb
 
 
-def plot_total_rain(days_list, outdir):
+aws_dir = Path(os.getenv("AWS_DIR"))
+shp_dir = "resources/ph_adm_shp/"
+outdir = Path("/home/modelman/forecast/output/web/maps/ewb/")
+
+
+def plot_total_rain():
 
     # Intialize dataframe
     df_aws = pd.DataFrame(columns=aws_cols)
@@ -23,10 +29,9 @@ def plot_total_rain(days_list, outdir):
 
         # Set date variable
         dt_var = today - dt.timedelta(int(day))
-        dt_var_str = str(dt_var)
 
         # Read station data
-        aws_fn = Path(aws_dir + "stn_obs_24hr_" + dt_var_str + "_08PHT.csv")
+        aws_fn = aws_dir / f"stn_obs_24hr_{dt_var}_08PHT.csv"
         if aws_fn.exists():
 
             aws_df = pd.read_csv(aws_fn, usecols=aws_cols, na_values="-999.000000")
@@ -83,15 +88,15 @@ def plot_total_rain(days_list, outdir):
                 linewidth=0.3,
                 alpha=1,
                 transform=ccrs.PlateCarree(),
-                cmap=cmap,
-                norm=norm,
+                cmap=cmap_ewb,
+                norm=norm_ewb,
             )
 
             cbar_ax = fig.add_axes([0.26, 0.04, 0.5, 0.02])
             fig.colorbar(cs, cax=cbar_ax, orientation="horizontal", extend="max")
 
             ax.set_title(
-                f"{day}-day Total Precipitation (mm) \n{dt_var_str}_08 PHT to "
+                f"{day}-day Total Precipitation (mm) \n{dt_var}_08 PHT to "
                 f"{str(today)}_08 PHT"
             )
 
@@ -107,10 +112,6 @@ if __name__ == "__main__":
     today = dt.date.today()
     # today = dt.date(2022, 6, 5) # for testing
 
-    aws_dir = "/home/modelman/forecast/input/aws_files/"
-    shp_dir = "resources/ph_adm_shp/"
-    outdir = Path("/home/modelman/forecast/output/web/maps/ewb/")
-
     outdir.mkdir(parents=True, exist_ok=True)
 
     # Read shape file
@@ -118,29 +119,9 @@ if __name__ == "__main__":
     provinces = ["Metropolitan Manila", "Rizal", "Bulacan", "Cavite", "Laguna"]
     mm = [muni for muni in reader.records() if muni.attributes["NAME_1"] in provinces]
 
-    # color map
-    clevs = [0, 10, 20, 60, 100, 200, 300, 400, 500, 600, 700, 1000]
-    cmap_data = [
-        (1.0, 1.0, 1.0),
-        (0.3137255012989044, 0.8156862854957581, 0.8156862854957581),
-        (0.0, 1.0, 1.0),
-        (0.0, 0.8784313797950745, 0.501960813999176),
-        (0.0, 0.7529411911964417, 0.0),
-        (0.501960813999176, 0.8784313797950745, 0.0),
-        (1.0, 1.0, 0.0),
-        (1.0, 0.6274510025978088, 0.0),
-        (1.0, 0.0, 0.0),
-        (1.0, 0.125490203499794, 0.501960813999176),
-        (0.9411764740943909, 0.250980406999588, 1.0),
-        (0.501960813999176, 0.125490203499794, 1.0),
-    ]
-
-    cmap = mcolors.ListedColormap(cmap_data, "precipitation")
-    norm = mcolors.BoundaryNorm(clevs, cmap.N)
-
     # aws columns
     aws_cols = ["name", "timestamp", "rr", "lat", "lon"]
 
     # set day range
-    day_range = [1, 3, 5, 7, 30]
-    plot_total_rain(day_range, outdir)
+    days_list = [1, 3, 5, 7, 30]
+    plot_total_rain()
