@@ -55,5 +55,5 @@ export MPLBACKEND="agg"
 export PYTHONPATH=${SCRIPT_DIR}/python:${PYTHONPATH}
 export PYTHON=${CONDA_PREFIX}/bin/python
 
-export VAL_DIR=$MAINDIR/validation
-export GSMAP_NC_DIR=${VAL_DIR}/input/gsmap
+export GSMAP_NC_DIR=${MAINDIR}/input/gsmap
+export GSMAP_DATA="gauge" # options : gauge , nrt , now [can only be run at 9:00 PHT sharp]
