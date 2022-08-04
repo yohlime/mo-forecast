@@ -18,13 +18,14 @@ outdir = Path("/home/modelman/forecast/output/web/maps/ewb/")
 yy = int(os.getenv("FCST_YY_GSMAP"))
 mm = int(os.getenv("FCST_MM_GSMAP"))
 dd = int(os.getenv("FCST_DD_GSMAP"))
-zz = int(os.getenv("FCST_ZZ_GSMAP"))
+# zz = int(os.getenv("FCST_ZZ_GSMAP"))
+zz = 0  # 8am values
 
 # set start date
 sd = datetime(yy, mm, dd, zz)
 
-# set end date for label
-ed = sd + timedelta(days=1)
+# set end date for label PHT
+ed = sd + timedelta(hours=32)
 ed_label = ed.strftime("%Y-%m-%d_%H")
 
 # create output directory
@@ -91,6 +92,10 @@ def plot_total_rain():
 
             cbar_ax = fig.add_axes([0.26, 0.04, 0.5, 0.02])
             fig.colorbar(cs, cax=cbar_ax, orientation="horizontal", extend="max")
+
+            # Set date variable PHT
+            dt_var_moving = dt_var + timedelta(hours=8)
+            dt_var_str = dt_var_moving.strftime("%Y-%m-%d_%H")
 
             ax.set_title(
                 f"{day}-day GSMaP Total Precipitation (mm) \n{dt_var_str} PHT to "
