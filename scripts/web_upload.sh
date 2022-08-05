@@ -49,6 +49,17 @@ echo " Done uploading web files!!! "
 echo "-----------------------------"
 
 echo "--------------------------"
+echo " Uploading files for EWB  "
+echo "--------------------------"
+
+scp -rp "$SRCDIR/web/maps/ewb/*.png" panahon.linode:~/websites/panahon/resources/model/img/ewb/
+scp -rp "$SRCDIR/web/maps/ewb/*.png" panahon.alapaap:~/websites/panahon-php/resources/model/img/ewb/
+
+echo "-----------------------------"
+echo " Done uploading EWB files!!! "
+echo "-----------------------------"
+
+echo "--------------------------"
 echo " Uploading files for EHB  "
 echo "--------------------------"
 
