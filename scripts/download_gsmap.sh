@@ -56,6 +56,13 @@ while [ "$CDATE" != "$EDATE" ]; do
   CDATE=$(date -d "$CDATE 1 hour" +'%Y-%m-%d %H:%M:%S')
 done
 
+# Wait for files to be available at certain time of day
+CDATE=$(date -d "$CDATE 12 hour" +%s)
+while [ "$(date +%s)" -lt "$CDATE" ]; do
+  echo "waiting for gsmap files to be available"
+  sleep 10m
+done
+
 DATE_STR=$(date +"%Y%m%d,%H")
 # Record start time
 DL_STIME=$(date +%s)
