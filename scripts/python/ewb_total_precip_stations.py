@@ -1,9 +1,9 @@
 # Description: Plot n-day total station precipitation for extreme weather bulletin
 # Author: Kevin Henson
-# Last edited: July 27, 2022
+# Last edited: Aug. 23, 2022
 
 import matplotlib.pyplot as plt
-import datetime as dt
+from datetime import datetime, timedelta
 import cartopy.crs as ccrs
 import pandas as pd
 import numpy as np
@@ -18,6 +18,33 @@ aws_dir = Path(os.getenv("AWS_DIR"))
 shp_dir = "resources/ph_adm_shp/"
 outdir = Path("/home/modelman/forecast/output/web/maps/ewb/")
 
+yy = int(os.getenv("FCST_YY_GSMAP"))
+mm = int(os.getenv("FCST_MM_GSMAP"))
+dd = int(os.getenv("FCST_DD_GSMAP"))
+# zz = int(os.getenv("FCST_ZZ_GSMAP"))
+zz = 0  # 8am values
+
+# set start date PHT
+sd = datetime(yy, mm, dd, zz) + timedelta(hours=8)
+
+# set end date for label PHT
+ed = sd + timedelta(1)
+ed_label = ed.strftime("%Y-%m-%d_%H")
+
+# create output directory
+outdir.mkdir(parents=True, exist_ok=True)
+
+# set day range
+days_list = [1, 3, 5, 7, 30]
+
+# Read shape file
+reader = shpreader.Reader(f"{shp_dir}PHL_adm2.shp")
+provinces = ["Metropolitan Manila", "Rizal", "Bulacan", "Cavite", "Laguna"]
+mm = [muni for muni in reader.records() if muni.attributes["NAME_1"] in provinces]
+
+# aws columns
+aws_cols = ["name", "timestamp", "rr", "lat", "lon"]
+
 
 def plot_total_rain():
 
@@ -25,18 +52,20 @@ def plot_total_rain():
     df_aws = pd.DataFrame(columns=aws_cols)
 
     # Loop through past n days
-    for day in np.arange(1, max(days_list) + 1):
+    for day in np.arange(0, max(days_list)):
 
         # Set date variable
-        dt_var = today - dt.timedelta(int(day))
+        dt_var = sd - timedelta(int(day))
+        dt_var_str = dt_var.strftime("%Y-%m-%d_%H")
 
         # Read station data
-        aws_fn = aws_dir / f"stn_obs_24hr_{dt_var}_08PHT.csv"
+        aws_fn = aws_dir / f"stn_obs_24hr_{dt_var_str}PHT.csv"
         if aws_fn.exists():
 
             aws_df = pd.read_csv(aws_fn, usecols=aws_cols, na_values="-999.000000")
             df_aws = pd.concat([df_aws, aws_df])
 
+        day += 1
         if day in days_list:
 
             # Get n day total precip
@@ -96,8 +125,8 @@ def plot_total_rain():
             fig.colorbar(cs, cax=cbar_ax, orientation="horizontal", extend="max")
 
             ax.set_title(
-                f"{day}-day Total Precipitation (mm) \n{dt_var}_08 PHT to "
-                f"{str(today)}_08 PHT"
+                f"{day}-day Total Precipitation (mm) \n{dt_var_str} PHT to "
+                f"{ed_label} PHT"
             )
 
             out_file = outdir / f"station_{day}day_totalprecip_latest.png"
@@ -109,19 +138,4 @@ def plot_total_rain():
 
 
 if __name__ == "__main__":
-    today = dt.date.today()
-    # today = dt.date(2022, 6, 5) # for testing
-
-    outdir.mkdir(parents=True, exist_ok=True)
-
-    # Read shape file
-    reader = shpreader.Reader(f"{shp_dir}PHL_adm2.shp")
-    provinces = ["Metropolitan Manila", "Rizal", "Bulacan", "Cavite", "Laguna"]
-    mm = [muni for muni in reader.records() if muni.attributes["NAME_1"] in provinces]
-
-    # aws columns
-    aws_cols = ["name", "timestamp", "rr", "lat", "lon"]
-
-    # set day range
-    days_list = [1, 3, 5, 7, 30]
     plot_total_rain()
