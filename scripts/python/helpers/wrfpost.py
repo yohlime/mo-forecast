@@ -1,4 +1,5 @@
 from typing import List
+from pathlib import Path
 from tqdm import tqdm
 from datetime import timedelta
 import pandas as pd
@@ -156,3 +157,19 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
         day_ds.append(_ds)
 
     return xr.merge(day_ds)
+
+
+def save_to_netcdf(ds: xr.Dataset, out_file: Path):
+    """Save as netCDF file
+
+    Args:
+        ds (xr.Dataset): input data
+        out_file (Path): file path
+    """
+    ds.lon.attrs["units"] = "degrees_east"
+    ds.lon.attrs["standard_name"] = "longitude"
+    ds.lon.attrs["long_name"] = "longitude"
+    ds.lat.attrs["units"] = "degrees_north"
+    ds.lat.attrs["standard_name"] = "latitude"
+    ds.lat.attrs["long_name"] = "latitude"
+    ds.to_netcdf(out_file, unlimited_dims=["time"])
