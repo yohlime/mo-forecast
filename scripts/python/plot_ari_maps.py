@@ -59,7 +59,7 @@ def input_format(ds):
     _ds = ds.mean("ens").rename({"lon": "longitude", "lat": "latitude"})
 
     _trmm = (
-        xr.open_dataset(script_dir / "python/resources/nc/trmm-annma_1998-2015.nc")
+        xr.open_dataset(script_dir / "python/resources/nc/trmm_domain_regrid.nc")
         .rename({"precipitation": "rain", "lon": "longitude", "lat": "latitude"})
         .sel(longitude=slice(117.375, 126.375), latitude=slice(5.125, 18.875))
         .drop("time_bnds")
