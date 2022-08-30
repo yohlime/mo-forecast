@@ -1,18 +1,14 @@
 import os
 import sys
 import getopt
-from tqdm import tqdm
 from pathlib import Path
-from datetime import timedelta
 from netCDF4 import Dataset
 import pandas as pd
-import xarray as xr
-import pytz
 
 from wrf import omp_set_num_threads, omp_get_max_threads
 
-from __const__ import wrf_dirs, wrf_forecast_days
-from helpers.wrf import wrf_getvar
+from __const__ import wrf_dirs
+from helpers.wrfpost import create_hour_ds, create_day_ds
 from plot_maps import plot_maps
 from plot_ts import plot_timeseries
 from plot_web_maps import plot_web_maps
@@ -25,118 +21,6 @@ from plot_ts_acenergy import plot_ts_ace
 
 omp_set_num_threads(int(os.getenv("SLURM_NTASKS", 4)))
 print(f"Using {omp_get_max_threads()} threads...")
-
-tz = pytz.timezone("Asia/Manila")
-
-vars = {
-    "rain": {"varname": "prcp"},
-    "temp": {"varname": "T2"},
-    "tsk": {"varname": "TSK"},
-    "hi": {"varname": "hi"},
-    "hix": {"varname": "hi"},
-    "rh": {"varname": "rh2"},
-    "u_850hPa": {"varname": "ua", "levels": 850, "interp": "pressure"},
-    "v_850hPa": {"varname": "va", "levels": 850, "interp": "pressure"},
-    "wpd": {"varname": "wpd"},
-    "ppv": {"varname": "ppv"},
-    "ghi": {"varname": "ghi"},
-}
-
-
-def create_hour_ds(wrfin):
-    nt = wrf_forecast_days * 24 + 1
-    hr_ds = []
-
-    # process needed variables
-    for var_name, var_info in tqdm(vars.items(), total=len(vars)):
-        print(f"Processing {var_name}...")
-        if var_name == "rain":
-            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
-            # create step-wise values
-            __da = []
-            for i in range(nt):
-                if i > 0:
-                    d = _da.isel(time=i)
-                    d.values = d.values - _da.isel(time=(i - 1)).values
-                    __da.append(d)
-                else:
-                    __da.append(_da.isel(time=i))
-            _da = __da.copy()
-        elif var_name in ["u_850hPa", "v_850hPa"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
-        elif var_name in ["wpd"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
-        else:
-            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
-
-        if var_name in ["temp", "tsk"]:
-            _da = _da - 273.15  # K to degC
-
-        if var_name in ["rain", "u_850hPa", "v_850hPa", "wpd"]:
-            _da = xr.concat(_da, "time")
-            _da = _da.transpose("key_0", "time", ...)
-
-        if var_name in ["u_850hPa", "v_850hPa", "wpd"]:
-            _da = _da.drop("level")
-
-        _da.name = var_name
-        hr_ds.append(xr.DataArray(_da, attrs={}))
-
-    # merge to one xarrray.Dataset
-    # clean coordinates/dims
-    hr_ds = xr.merge(hr_ds)
-    hr_ds = hr_ds.assign_coords(
-        west_east=hr_ds.lon[0, :].values,
-        south_north=hr_ds.lat[:, 0].values,
-        key_0=range(len(wrfin.keys())),
-    )
-    hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
-    hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
-    return hr_ds
-
-
-def create_day_ds(hr_ds):
-    dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
-    day_ds = []
-    _ds = (
-        hr_ds[["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]]
-        .isel(time=dayidxs)
-        .copy()
-    )
-    _ds = _ds.assign_coords(
-        time=[pd.to_datetime(dt) - timedelta(days=1) for dt in _ds.time.values],
-    )
-    day_ds.append(_ds)
-
-    init_dt = pd.to_datetime(hr_ds.time.values[0])
-    _ds = hr_ds[["rain", "wpd", "ppv", "ghi"]].sel(time=hr_ds.time[1:]).copy()
-    _ds = _ds.assign_coords(
-        time=[
-            pd.to_datetime(dt) - timedelta(hours=init_dt.hour + 1)
-            for dt in _ds.time.values
-        ],
-    )
-    _ds = _ds.groupby("time.day").sum().rename({"day": "time"})
-    _ds = _ds.assign_coords(
-        time=day_ds[0].time.values,
-    )
-    day_ds.append(_ds)
-
-    init_dt = pd.to_datetime(hr_ds.time.values[0])
-    _ds = hr_ds[["hix"]].sel(time=hr_ds.time[1:]).copy()
-    _ds = _ds.assign_coords(
-        time=[
-            pd.to_datetime(dt) - timedelta(hours=init_dt.hour + 1)
-            for dt in _ds.time.values
-        ],
-    )
-    _ds = _ds.groupby("time.day").max().rename({"day": "time"})
-    _ds = _ds.assign_coords(
-        time=day_ds[0].time.values,
-    )
-    day_ds.append(_ds)
-
-    return xr.merge(day_ds)
 
 
 def main(wrfin, out_dir):
