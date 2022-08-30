@@ -17,7 +17,7 @@ git clone http://rcs.observatory.ph/git/egozo/mo_forecast.git ~/forecast
 ### 2. Install conda environment
 ```
 cd ~/forecast
-conda create -f venv.yaml -p ./venv
+conda env create -f ./venv.yaml -p ./venv
 ```
 
 ### 3. Create a configuration file
@@ -34,7 +34,7 @@ vi set_cron_env.sh
     - __WPS__/ - should contain _geogrid.exe_, _ungrib.exe_, _metgrid.exe_ and related files like _namelist.wps_, _geog/_ and _VTable_. Can be a symbolic link to _\<WPS SRC DIR\>/_.
     - __WRF__/ - should contain _real.exe_, _wrf.exe_ and related files like _namelist.wrf_. Can be a symbolic link to _\<WRF SRC DIR\>/test/em_real_.
 
-### 4. Create a cron entry
+### 5. Create a cron entry
 ```
 # 5-day forecast ensemble
 # 00Z and 12Z
