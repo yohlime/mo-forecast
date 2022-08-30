@@ -39,4 +39,18 @@ vi set_cron_env.sh
 # 5-day forecast ensemble
 # 00Z and 12Z
 40 2,14 * * * . $HOME/forecast/set_cron_env.sh; . $HOME/forecast/scripts/run_fcst.sh
+```  
+
+## Update
+---
+
+### 1. Pull from the repo
+```
+git pull
+```
+
+### 2. Update conda environment
+```
+cd ~/forecast
+conda env update -f ./venv.yaml --prune
 ```
