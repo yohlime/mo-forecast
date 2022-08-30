@@ -43,10 +43,8 @@ vars = {
 }
 
 
-def main(wrfin, out_dir):
+def create_hour_ds(wrfin):
     nt = wrf_forecast_days * 24 + 1
-
-    # region create hourly dataset
     hr_ds = []
 
     # process needed variables
@@ -94,9 +92,10 @@ def main(wrfin, out_dir):
     )
     hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
     hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
-    # endregion create hourly dataset
+    return hr_ds
 
-    # region create daily dataset
+
+def create_day_ds(hr_ds):
     dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
     day_ds = []
     _ds = (
@@ -137,8 +136,17 @@ def main(wrfin, out_dir):
     )
     day_ds.append(_ds)
 
-    day_ds = xr.merge(day_ds)
-    # endregion create daily dataset
+    return xr.merge(day_ds)
+
+
+def main(wrfin, out_dir):
+    # create hourly dataset
+    hr_ds = create_hour_ds(wrfin)
+
+    init_dt = pd.to_datetime(hr_ds.time.values[0])
+
+    # create daily dataset
+    day_ds = create_day_ds(hr_ds)
 
     # region output
     _out_dir = out_dir / "maps"
