@@ -15,7 +15,7 @@ from __const__ import cmap_ewb, norm_ewb
 
 
 aws_dir = Path(os.getenv("AWS_DIR"))
-shp_dir = "resources/ph_adm_shp/"
+shp_dir = "resources/shp/PHL_adm2/"
 outdir = Path("/home/modelman/forecast/output/web/maps/ewb/")
 
 yy = int(os.getenv("FCST_YY_GSMAP"))
