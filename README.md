@@ -52,6 +52,5 @@ git pull
 ### 2. Update conda environment
 ```
 cd ~/forecast
-conda activate ./venv
-conda env update -f ./venv.yaml --prune
+conda env update -p ./venv -f ./venv.yaml --prune
 ```
