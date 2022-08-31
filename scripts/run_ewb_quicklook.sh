@@ -19,4 +19,15 @@ fi
 $PYTHON ewb_total_precip_stations.py
 $PYTHON ewb_total_precip_gsmap.py
 
+echo "--------------------------"
+echo " Uploading files for EWB  "
+echo "--------------------------"
+
+scp -rp "${OUTDIR}/web/maps/ewb/"*.png panahon.linode:~/websites/panahon/resources/model/img/ewb/
+scp -rp "${OUTDIR}/web/maps/ewb/"*.png panahon.alapaap:~/websites/panahon-php/resources/model/img/ewb/
+
+echo "-----------------------------"
+echo " Done uploading EWB files!!! "
+echo "-----------------------------"
+
 cd "$MAINDIR" || exit

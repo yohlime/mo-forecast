@@ -79,3 +79,6 @@ echo "  ********************  "
 mkdir -p "$NAMELIST_RUN"
 
 mv "wrfout_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}_00_00" "$NAMELIST_RUN/wrfout_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}_00_00_${WRF_FCST_DAYS}-day_fcst_rain"
+
+rm "$WRF_REALDIR/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
+rm "$WRF_REALDIR/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
