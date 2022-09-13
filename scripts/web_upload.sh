@@ -29,20 +29,19 @@ cat <<EOF >"$SRCDIR/info.json"
     "hour": "$HH2"
 }
 EOF
-scp "$SRCDIR/info.json" panahon.linode:~/websites/panahon/resources/model/
-scp "$SRCDIR/info.json" panahon.alapaap:~/websites/panahon-php/resources/model/
 
-# panahon.observatory.ph
-scp "$SRCDIR/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" panahon.linode:~/websites/panahon/resources/model/img/
-scp "$SRCDIR/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" panahon.alapaap:~/websites/panahon-php/resources/model/img/
-scp "$SRCDIR/timeseries/img"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" panahon.linode:~/websites/panahon/resources/model/img/
-scp "$SRCDIR/timeseries/img"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" panahon.alapaap:~/websites/panahon-php/resources/model/img/
+web_dirs=("panahon.alapaap:websites/panahon-php" "panahon.linode:websites/panahon-php")
 
-# panahon.observatory.ph/ecw
-scp "$SRCDIR/web/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" panahon.linode:~/websites/panahon/resources/model/web_img/
-scp "$SRCDIR/web/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" panahon.alapaap:~/websites/panahon-php/resources/model/web_img/
-scp "$SRCDIR/web/json/forecast_$YY2-$mm2-${dd2}_${HH2}PHT.json" panahon.linode:~/websites/panahon/resources/model/
-scp "$SRCDIR/web/json/forecast_$YY2-$mm2-${dd2}_${HH2}PHT.json" panahon.alapaap:~/websites/panahon-php/resources/model/
+for web_dir in "${web_dirs[@]}"; do
+  scp "$SRCDIR/info.json" "${web_dir}/resources/model/"
+
+  scp "$SRCDIR/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/"
+  scp "$SRCDIR/timeseries/img"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/"
+
+  # /ecw
+  scp "$SRCDIR/web/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/web_img/"
+  scp "$SRCDIR/web/json/forecast_$YY2-$mm2-${dd2}_${HH2}PHT.json" "${web_dir}/resources/model/"
+done
 
 echo "-----------------------------"
 echo " Done uploading web files!!! "
