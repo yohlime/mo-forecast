@@ -134,7 +134,7 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
                 for dt in _ds.time.values
             ],
         )
-        _ds = _ds.groupby("time.day").sum().rename({"day": "time"})
+        _ds = _ds.resample(time='24H').sum('time')
         _ds = _ds.assign_coords(
             time=day_ds[0].time.values,
         )
@@ -150,7 +150,7 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
                 for dt in _ds.time.values
             ],
         )
-        _ds = _ds.groupby("time.day").max().rename({"day": "time"})
+        _ds = _ds.resample(time='24H').max('time')
         _ds = _ds.assign_coords(
             time=day_ds[0].time.values,
         )
