@@ -45,6 +45,8 @@ def plot_maps(ds, out_dir):
 
             if var_name == "rain":
                 da = ds[var_name].isel(time=t).mean("ens")
+            elif var_name in ["rain_run1","rain_run2","rain_run3"]:
+                da = ds["rain"].isel(time=t, ens=int(var_name[-1])-1)
             elif var_name == "rainx":
                 da = ds["rain"].isel(time=t).mean("ens")
                 trmm2 = trmm.isel(time=da.time.dt.month.values - 1)

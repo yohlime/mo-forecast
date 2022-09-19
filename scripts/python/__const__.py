@@ -48,40 +48,51 @@ trmm = open_xr_dataset(script_dir / "python/resources/nc/trmm_1998-2015_clim.nc"
     "precipitation"
 ]
 
+rain_color = [
+    "#ffffff",
+    "#0064ff",
+    "#01b4ff",
+    "#32db80",
+    "#9beb4a",
+    "#ffeb00",
+    "#ffb302",
+    "#ff6400",
+    "#eb1e00",
+    "#af0000",
+]
+
+rain_levs = [5, 10, 20, 30, 50, 100, 150, 200, 250]
+
 plot_vars = {
     "rain": {
         "title": "24-Hr Total Rainfall [mm]",
         "units": "mm",
-        "levels": [5, 10, 20, 30, 50, 100, 150, 200, 250],
-        "colors": [
-            "#ffffff",
-            "#0064ff",
-            "#01b4ff",
-            "#32db80",
-            "#9beb4a",
-            "#ffeb00",
-            "#ffb302",
-            "#ff6400",
-            "#eb1e00",
-            "#af0000",
-        ],
+        "levels": rain_levs,
+        "colors": rain_color,
+    },
+    "rain_run1": {
+        "title": "24-Hr Total Rainfall [mm]",
+        "units": "mm",
+        "levels": rain_levs,
+        "colors": rain_color,
+    },
+    "rain_run2": {
+        "title": "24-Hr Total Rainfall [mm]",
+        "units": "mm",
+        "levels": rain_levs,
+        "colors": rain_color,
+    },
+    "rain_run3": {
+        "title": "24-Hr Total Rainfall [mm]",
+        "units": "mm",
+        "levels": rain_levs,
+        "colors": rain_color,
     },
     "rainx": {
         "title": "Areas with Potential Extreme Rainfall",
         "units": "mm",
-        "levels": [5, 10, 20, 30, 50, 100, 150, 200, 250],
-        "colors": [
-            "#ffffff",
-            "#0064ff",
-            "#01b4ff",
-            "#32db80",
-            "#9beb4a",
-            "#ffeb00",
-            "#ffb302",
-            "#ff6400",
-            "#eb1e00",
-            "#af0000",
-        ],
+        "levels": rain_levs,
+        "colors": rain_color,
     },
     "temp": {
         "title": "Air (2m) and Sea Surface Temperature [°C]",
