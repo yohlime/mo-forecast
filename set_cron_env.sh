@@ -9,6 +9,7 @@ export SCRIPT_DIR=${MAINDIR}/scripts
 export LOG_DIR=${MAINDIR}/logs
 
 export GFS_BASE_DIR="${MAINDIR}/input/gfs_files"
+export GFS_NC_DIR=${GFS_BASE_DIR}/nc
 export MADIS_BASE_DIR="${MAINDIR}/input/madis_files"
 
 export WPS_GFSDIR=${MAINDIR}/model/WPS/GFS
@@ -55,5 +56,11 @@ export MPLBACKEND="agg"
 export PYTHONPATH=${SCRIPT_DIR}/python:${PYTHONPATH}
 export PYTHON=${CONDA_PREFIX}/bin/python
 
+#EWB
+export EWB_DIR=${MAINDIR}/ewb_python
 export GSMAP_NC_DIR=${MAINDIR}/input/gsmap
 export GSMAP_DATA="gauge" # options : gauge , nrt , now [can only be run at 9:00 PHT sharp]
+export CLIM_DIR=/home/modelman/forecast/climatology/frJulie/01_forForecasting
+export APHRO_DIR=$CLIM_DIR/APHRODITE/rain/GRIDS_5km/MONTHLY
+export TRMM_DIR=$CLIM_DIR/TRMM/GRIDS_5km/MONTHLY
+export WRF_NC_DIR=${OUTDIR}/nc

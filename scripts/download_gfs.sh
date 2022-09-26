@@ -72,6 +72,13 @@ echo "$DATE_STR,$DL_DURATION,$TOT_SIZE,$DL_SPEED" >>"$DL_SPEED_LOG_FILE"
 rm -f "$DL_LIST"
 rm -f "$DL_OUT"
 
+cd "$SCRIPT_DIR/python" || exit
+
+# Convert GFS precipitation grb files to .nc
+$PYTHON convert_gfs_nc.py -i "$GFS_DIR" -o "$GFS_NC_DIR"
+
+cd "$MAINDIR" || exit
+
 echo "---------------------------------"
 echo " Finished downloading GFS files! "
 echo "---------------------------------"
