@@ -26,6 +26,7 @@ export FCST_DD2=${FCST_YYYYMMDD2:6:2}
 
 export GFS_DIR="${GFS_BASE_DIR}/$FCST_YYYYMMDD/$FCST_ZZ"
 export MADIS_DIR="${MADIS_BASE_DIR}/$FCST_YYYYMMDD/$FCST_ZZ"
+export EWB_OUTDIR="${OUTDIR}/ewb/${FCST_YY}${FCST_MM}${FCST_DD}/$FCST_ZZ"
 
 # set variables for download_gsmap.sh
 FCST_YYYYMMDD_GSMAP=$(date -d "${FCST_YY}-${FCST_MM}-${FCST_DD} $FCST_ZZ:00:00 12 hours ago" +'%Y%m%d')
