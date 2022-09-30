@@ -75,24 +75,7 @@ plot_vars = {
         "units": "mm",
         "levels": rain_levs,
         "colors": rain_color,
-    },
-    "rain_run1": {
-        "title": "24-Hr Total Rainfall [mm]",
-        "units": "mm",
-        "levels": rain_levs,
-        "colors": rain_color,
-    },
-    "rain_run2": {
-        "title": "24-Hr Total Rainfall [mm]",
-        "units": "mm",
-        "levels": rain_levs,
-        "colors": rain_color,
-    },
-    "rain_run3": {
-        "title": "24-Hr Total Rainfall [mm]",
-        "units": "mm",
-        "levels": rain_levs,
-        "colors": rain_color,
+        "ens_mem": True,
     },
     "rainx": {
         "title": "Areas with Potential Extreme Rainfall",
