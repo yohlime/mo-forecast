@@ -5,7 +5,7 @@ from datetime import timedelta
 import pandas as pd
 import xarray as xr
 
-from __const__ import wrf_forecast_days
+from __const__ import wrf_forecast_days, data_dir
 
 from helpers.wrf import wrf_getvar
 
@@ -22,6 +22,31 @@ VARS = {
     "ppv": {"varname": "ppv"},
     "ghi": {"varname": "ghi"},
 }
+
+
+def get_hour_ds(date_str: str = "", src_dir: Path = data_dir / "nc") -> xr.Dataset:
+    """Retrieve hourly dataset from post-processed WRF output
+
+    Args:
+        date_str (str, optional): Date string in `%Y-%m-%d_%H` format. Defaults to "".
+        src_dir (str or Path, optional): Source directory. Defaults to data_dir/"nc".
+
+    Returns:
+        xr.Dataset or None: hourly Dataset
+    """
+    if not isinstance(src_dir, Path):
+        src_dir = Path(src_dir)
+
+    if date_str != "":
+        files = list(src_dir.glob(f"*{date_str}.nc"))
+    else:
+        files = sorted(src_dir.glob("*.nc"), reverse=True)
+
+    if len(files) == 0:
+        print("File not found")
+        return None
+
+    return xr.open_dataset(files[0])
 
 
 def create_hour_ds(
@@ -134,7 +159,7 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
                 for dt in _ds.time.values
             ],
         )
-        _ds = _ds.resample(time='24H').sum('time')
+        _ds = _ds.resample(time="24H").sum("time")
         _ds = _ds.assign_coords(
             time=day_ds[0].time.values,
         )
@@ -150,7 +175,7 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
                 for dt in _ds.time.values
             ],
         )
-        _ds = _ds.resample(time='24H').max('time')
+        _ds = _ds.resample(time="24H").max("time")
         _ds = _ds.assign_coords(
             time=day_ds[0].time.values,
         )

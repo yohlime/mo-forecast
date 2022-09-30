@@ -11,6 +11,12 @@ import seaborn as sns
 tz = pytz.timezone("Asia/Manila")
 plot_proj = ccrs.PlateCarree()
 
+data_dir = os.getenv("OUTDIR")
+if data_dir is None:
+    raise NotADirectoryError("OUTDIR not set")
+else:
+    data_dir = Path(data_dir)
+
 wrf_maindir = os.getenv("WRF_REALDIR")
 if wrf_maindir is None:
     raise NotADirectoryError("WRF_REALDIR not set")
