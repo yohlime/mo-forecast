@@ -49,7 +49,12 @@ done
 # Cancel any jobs from previous cycle
 job_list=$(squeue -u "$SLURM_USER" -p "$SLURM_PARTITION" --format="%i %j" | grep ecw | awk '{print $1}')
 if [ -n "$job_list" ]; then
-  scancel "$job_list"
+
+  for j in $job_list; do
+    jobs+=("$j")
+  done
+
+  scancel "${jobs[@]}"
 fi
 
 echo "-----------------------"
@@ -167,7 +172,7 @@ slurm_opts+=("-d" "afterany:$prev_jid")
 slurm_opts+=("-J" "ecw_ewb-$FCST_YYYYMMDD$FCST_ZZ")
 slurm_opts+=("-o" "$log_file")
 slurm_opts+=("-n" "1")
-slurm_opts+=("$SCRIPT_DIR/run_ewb_quicklook.sh")
+slurm_opts+=("$EWB_DIR/run_ewb_quicklook.sh")
 prev_jid=$(sbatch "${slurm_opts[@]}")
 
 ### Notifier
