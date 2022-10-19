@@ -28,14 +28,21 @@ ylim = (5, 20)
 def plot_maps(ds, out_dir):
     init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(tz)
     init_dt_str = init_dt.strftime("%Y-%m-%d %H")
+    tsteps = len(ds.time)
+    hr_interval = int(24 * wrf_forecast_days / tsteps)
 
     for var_name, var_info in plot_vars.items():
         print(f"Plotting {var_name}...")
         levels = var_info["levels"]
         colors = var_info["colors"]
+        if var_name in ["rain", "wpd", "ppv"]:
+            title = str(hr_interval) + var_info["title"]
+        else:
+            title = var_info["title"]
+
         plot_ens_mem = var_info.get("ens_mem", False)
-        for t in range(wrf_forecast_days):
-            print(f"Day {t+1}...")
+        for t in range(tsteps):
+            print(f"Timestep {t+1}...")
 
             if var_name in ["rain", "rh", "wpd", "ppv"]:
                 das = {"ens": ds[var_name].isel(time=t).mean("ens")}
@@ -74,16 +81,17 @@ def plot_maps(ds, out_dir):
             for da_name, da in das.items():
                 dt1 = pd.to_datetime(da.time.values, utc=True).astimezone(tz)
                 dt1_str = dt1.strftime("%Y-%m-%d %H")
-                dt2 = dt1 + timedelta(days=1)
+                dt2 = dt1 + timedelta(hours=hr_interval)
                 dt2_str = dt2.strftime("%Y-%m-%d %H")
-                plt_title = (
-                    f"{var_info['title']}\nValid from {dt1_str} to {dt2_str} PHT"
-                )
+                plt_title = f"{title}\nValid from {dt1_str} to {dt2_str} PHT"
                 plt_annotation = (
                     f"WRF ensemble forecast initialized at {init_dt_str} PHT."
                 )
 
-                fig = plt.figure(figsize=(8, 9), constrained_layout=True)
+                fig_scale = 0.75
+                fig = plt.figure(
+                    figsize=(8 * fig_scale, 9 * fig_scale), constrained_layout=True
+                )
                 ax = plt.axes(projection=plot_proj)
                 ax.xaxis.set_major_formatter(lon_formatter)
                 ax.yaxis.set_major_formatter(lat_formatter)
@@ -106,7 +114,7 @@ def plot_maps(ds, out_dir):
                         add_labels=False,
                         linewidths=0.5,
                     )
-                    ax.clabel(p, p.levels, inline=True, fontsize=6)
+                    ax.clabel(p, p.levels, inline=True, fontsize=6 * fig_scale)
                 elif var_name == "wind":
                     cmap = ListedColormap(colors)
                     norm = BoundaryNorm(levels, cmap.N, extend="both")
@@ -116,7 +124,7 @@ def plot_maps(ds, out_dir):
                         u.values,
                         v.values,
                         da.values,
-                        length=6,
+                        length=5.5,
                         cmap=cmap,
                         norm=norm,
                         transform=plot_proj,
@@ -125,7 +133,7 @@ def plot_maps(ds, out_dir):
                 elif var_name == "ppv":
                     da = da.salem.roi(roi=land_mask.mask)
 
-                fig.suptitle(plt_title, fontsize=14)
+                fig.suptitle(plt_title, fontsize=14 * fig_scale)
 
                 if var_name in ["wpd", "ppv"]:
                     text_color = "blue"
@@ -135,7 +143,9 @@ def plot_maps(ds, out_dir):
                     tot_wpd = da.salem.roi(roi=land_mask.mask).sum().values / 1000
                     tot_wpd = int(tot_wpd.round())
                     ax.set_title(
-                        f"Total$^{{*}}$: {tot_wpd} GW", fontsize=24, color=text_color
+                        f"Total$^{{*}}$: {tot_wpd} GW",
+                        fontsize=24 * fig_scale,
+                        color=text_color,
                     )
 
                 if var_name != "wind":
@@ -159,7 +169,11 @@ def plot_maps(ds, out_dir):
                         add_labels=False,
                         add_colorbar=False,
                     )
-                p.colorbar.ax.set_title(f"[{var_info['units']}]", pad=20, fontsize=10)
+                p.colorbar.ax.set_title(
+                    f"[{var_info['units']}]",
+                    pad=20 * fig_scale,
+                    fontsize=10 * fig_scale,
+                )
                 ax.coastlines()
                 ax.set_extent((*xlim, *ylim))
                 if var_name in ["wpd", "ppv"]:
@@ -167,26 +181,32 @@ def plot_maps(ds, out_dir):
                         "$^{*}$Philippine landmass only",
                         xy=(5, -30),
                         xycoords="axes points",
-                        fontsize=8,
+                        fontsize=8 * fig_scale,
                         color=text_color,
                     )
                     ax.annotate(
-                        plt_annotation, xy=(5, -40), xycoords="axes points", fontsize=8
+                        plt_annotation,
+                        xy=(5, -40),
+                        xycoords="axes points",
+                        fontsize=8 * fig_scale,
                     )
                 else:
                     ax.annotate(
-                        plt_annotation, xy=(5, -30), xycoords="axes points", fontsize=8
+                        plt_annotation,
+                        xy=(5, -30),
+                        xycoords="axes points",
+                        fontsize=8 * fig_scale,
                     )
                 ax.annotate(
                     "observatory.ph",
                     xy=(10, 10),
                     xycoords="axes points",
-                    fontsize=10,
+                    fontsize=10 * fig_scale,
                     bbox=dict(boxstyle="square,pad=0.3", alpha=0.5),
                     alpha=0.5,
                 )
 
-                tt = (t + 1) * 24
+                tt = int((t + 1) * hr_interval)
                 file_prfx = "wrf"
                 if "run" in da_name:
                     file_prfx += f"_{da_name}"
@@ -194,5 +214,5 @@ def plot_maps(ds, out_dir):
                     out_dir
                     / f"{file_prfx}-{tt}hr_{var_name}_{init_dt.strftime('%Y-%m-%d_%H')}PHT.png"
                 )
-                fig.savefig(out_file, bbox_inches="tight", dpi=300)
+                fig.savefig(out_file, bbox_inches="tight", dpi=100)
                 plt.close("all")

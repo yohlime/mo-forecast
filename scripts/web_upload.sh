@@ -35,7 +35,8 @@ web_dirs=("panahon.alapaap:websites/panahon-php" "panahon.linode:websites/panaho
 for web_dir in "${web_dirs[@]}"; do
   scp "$SRCDIR/info.json" "${web_dir}/resources/model/"
 
-  scp "$SRCDIR/maps"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/"
+  scp "$SRCDIR/maps/24hrly"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/24hrly"
+  scp "$SRCDIR/maps/3hrly"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/3hrly"
   scp "$SRCDIR/timeseries/img"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/"
 
   # /ecw

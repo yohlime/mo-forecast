@@ -8,7 +8,7 @@ import pandas as pd
 from wrf import omp_set_num_threads, omp_get_max_threads
 
 from __const__ import wrf_dirs
-from helpers.wrfpost import create_hour_ds, create_day_ds, save_to_netcdf
+from helpers.wrfpost import create_hour_ds, create_interval_ds, save_to_netcdf
 from plot_maps import plot_maps
 from plot_ts import plot_timeseries
 from plot_web_maps import plot_web_maps
@@ -26,17 +26,23 @@ print(f"Using {omp_get_max_threads()} threads...")
 def main(wrfin, out_dir):
     hr_ds = create_hour_ds(wrfin)  # create hourly dataset
     init_dt = pd.to_datetime(hr_ds.time.values[0])
+    init_dt_str = f"{init_dt:%Y%m%d}"
+    init_dt_str_hh = f"{init_dt:%H}"
     out_file = out_dir / f"nc/wrf_{init_dt:%Y-%m-%d_%H}.nc"
     out_file.parent.mkdir(parents=True, exist_ok=True)
     print(f"Saving data to {out_file}")
     save_to_netcdf(hr_ds, out_file)
-    day_ds = create_day_ds(hr_ds)  # create daily dataset
+    day_ds = create_interval_ds(hr_ds, 24)  # create daily dataset
+    three_hrly_ds = create_interval_ds(hr_ds, 3)  # create three hourly dataset
 
     # region output
-    _out_dir = out_dir / "maps"
-    _out_dir.mkdir(parents=True, exist_ok=True)
     print("Creating maps...")
+    _out_dir = out_dir / f"maps/24hrly/{init_dt_str}/{init_dt_str_hh}"
+    _out_dir.mkdir(parents=True, exist_ok=True)
     plot_maps(day_ds, _out_dir)
+    _out_dir = out_dir / f"maps/3hrly/{init_dt_str}/{init_dt_str_hh}"
+    _out_dir.mkdir(parents=True, exist_ok=True)
+    plot_maps(three_hrly_ds, _out_dir)
 
     _out_dir = out_dir / "timeseries/img"
     _out_dir.mkdir(parents=True, exist_ok=True)

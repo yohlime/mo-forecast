@@ -124,7 +124,7 @@ def create_hour_ds(
     return hr_ds
 
 
-def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
+def create_interval_ds(hr_ds: xr.Dataset, hr_interval) -> xr.Dataset:
     """Create daily dataset from processed hourly data
 
     Args:
@@ -134,8 +134,9 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
         xr.Dataset: daily Dataset
     """
     var_names = list(hr_ds.keys())
-    dayidxs = [day * 24 for day in range(1, wrf_forecast_days + 1)]
-    day_ds = []
+    interval_range = range(1, wrf_forecast_days * 24 // hr_interval + 1)
+    intervalidxs = [interval * hr_interval for interval in interval_range]
+    interval_ds = []
 
     instant_var_names = ["temp", "tsk", "hi", "rh", "u_850hPa", "v_850hPa"]
     sum_var_names = ["rain", "wpd", "ppv", "ghi"]
@@ -143,11 +144,14 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
 
     _var_names = [v for v in var_names if v in instant_var_names]
     if _var_names:
-        _ds = hr_ds[_var_names].isel(time=dayidxs).copy()
+        _ds = hr_ds[_var_names].isel(time=intervalidxs).copy()
         _ds = _ds.assign_coords(
-            time=[pd.to_datetime(dt) - timedelta(days=1) for dt in _ds.time.values],
+            time=[
+                pd.to_datetime(dt) - timedelta(hours=hr_interval)
+                for dt in _ds.time.values
+            ],
         )
-        day_ds.append(_ds)
+        interval_ds.append(_ds)
 
     _var_names = [v for v in var_names if v in sum_var_names]
     if _var_names:
@@ -159,11 +163,11 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
                 for dt in _ds.time.values
             ],
         )
-        _ds = _ds.resample(time="24H").sum("time")
+        _ds = _ds.resample(time=f"{hr_interval}H").sum("time")
         _ds = _ds.assign_coords(
-            time=day_ds[0].time.values,
+            time=interval_ds[0].time.values,
         )
-        day_ds.append(_ds)
+        interval_ds.append(_ds)
 
     _var_names = [v for v in var_names if v in max_var_names]
     if _var_names:
@@ -175,13 +179,13 @@ def create_day_ds(hr_ds: xr.Dataset) -> xr.Dataset:
                 for dt in _ds.time.values
             ],
         )
-        _ds = _ds.resample(time="24H").max("time")
+        _ds = _ds.resample(time=f"{hr_interval}H").max("time")
         _ds = _ds.assign_coords(
-            time=day_ds[0].time.values,
+            time=interval_ds[0].time.values,
         )
-        day_ds.append(_ds)
+        interval_ds.append(_ds)
 
-    return xr.merge(day_ds)
+    return xr.merge(interval_ds)
 
 
 def save_to_netcdf(ds: xr.Dataset, out_file: Path):

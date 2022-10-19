@@ -4,7 +4,6 @@ import pytz
 from pathlib import Path
 from salem import open_xr_dataset
 from cartopy import crs as ccrs
-import matplotlib.colors as mcolors
 
 import seaborn as sns
 
@@ -71,7 +70,7 @@ rain_levs = [5, 10, 20, 30, 50, 100, 150, 200, 250]
 
 plot_vars = {
     "rain": {
-        "title": "24-Hr Total Rainfall [mm]",
+        "title": "-Hr Total Rainfall [mm]",
         "units": "mm",
         "levels": rain_levs,
         "colors": rain_color,
@@ -100,7 +99,7 @@ plot_vars = {
         ),
     },
     "hix": {
-        "title": "Daily Maximum Heat Index [°C]",
+        "title": "Maximum Heat Index [°C]",
         "units": "°C",
         "levels": [27, 32, 41, 54],
         "colors": sns.blend_palette(
@@ -139,7 +138,7 @@ plot_vars = {
         ),
     },
     "wpd": {
-        "title": "24-Hr Total Wind Power Potential [MW]",
+        "title": "-Hr Total Wind Power Potential [MW]",
         "units": "MW",
         "levels": [2.1, 3.2, 4.2, 5.2, 6.2, 8.3],
         "colors": [
@@ -154,7 +153,7 @@ plot_vars = {
         ],
     },
     "ppv": {
-        "title": "24-Hr Total Solar Power Potential [MW]",
+        "title": "-Hr Total Solar Power Potential [MW]",
         "units": "MW",
         "levels": [1, 2.4, 3.8, 5.2, 6.6, 8],
         "colors": sns.blend_palette(
@@ -221,23 +220,3 @@ plot_vars_web = {
         ),
     },
 }
-
-# color map
-clevs = [0, 10, 20, 60, 100, 200, 300, 400, 500, 600, 700, 1000]
-cmap_data = [
-    (1.0, 1.0, 1.0),
-    (0.3137255012989044, 0.8156862854957581, 0.8156862854957581),
-    (0.0, 1.0, 1.0),
-    (0.0, 0.8784313797950745, 0.501960813999176),
-    (0.0, 0.7529411911964417, 0.0),
-    (0.501960813999176, 0.8784313797950745, 0.0),
-    (1.0, 1.0, 0.0),
-    (1.0, 0.6274510025978088, 0.0),
-    (1.0, 0.0, 0.0),
-    (1.0, 0.125490203499794, 0.501960813999176),
-    (0.9411764740943909, 0.250980406999588, 1.0),
-    (0.501960813999176, 0.125490203499794, 1.0),
-]
-
-cmap_ewb = mcolors.ListedColormap(cmap_data, "precipitation")
-norm_ewb = mcolors.BoundaryNorm(clevs, cmap_ewb.N)
