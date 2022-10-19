@@ -13,7 +13,7 @@ echo "--------------------------"
 
 SRCDIR=${OUTDIR}
 
-IMGS=("$SRCDIR/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png")
+IMGS=("$SRCDIR/maps/24hrly/${FCST_YYYYMMDD}/${FCST_ZZ}"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png")
 if [ ${#IMGS[@]} -eq 1 ]; then
   err_msg="No files to upload"
   echo "$err_msg" >>"$ERROR_FILE"
@@ -30,18 +30,24 @@ cat <<EOF >"$SRCDIR/info.json"
 }
 EOF
 
-web_dirs=("panahon.alapaap:websites/panahon-php" "panahon.linode:websites/panahon-php")
+remotes=("panahon.alapaap" "panahon.linode")
+web_dirs=("websites/panahon-php" "websites/panahon-php")
+img_types=("24hrly" "3hrly")
 
-for web_dir in "${web_dirs[@]}"; do
-  scp "$SRCDIR/info.json" "${web_dir}/resources/model/"
+for r in "${!remotes[@]}"; do
+  scp "$SRCDIR/info.json" "${remotes[$r]}:${web_dirs[$r]}/resources/model/"
 
-  scp "$SRCDIR/maps/24hrly"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/24hrly"
-  scp "$SRCDIR/maps/3hrly"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/3hrly"
-  scp "$SRCDIR/timeseries/img"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/img/"
+  for img_type in "${img_types[@]}"; do
+    local_src="$SRCDIR/maps/${img_type}/${FCST_YYYYMMDD}/${FCST_ZZ}"
+    remote_dest="${web_dirs[$r]}/resources/model/img/${img_type}/${FCST_YYYYMMDD}/${FCST_ZZ}"
+    ssh "${remotes[$r]}" mkdir -p "${remote_dest}"
+    scp "${local_src}"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${remotes[$r]}:${remote_dest}"
+  done
+  scp "$SRCDIR/timeseries/img"/wrf*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${remotes[$r]}:${web_dirs[$r]}/resources/model/img/"
 
   # /ecw
-  scp "$SRCDIR/web/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${web_dir}/resources/model/web_img/"
-  scp "$SRCDIR/web/json/forecast_$YY2-$mm2-${dd2}_${HH2}PHT.json" "${web_dir}/resources/model/"
+  scp "$SRCDIR/web/maps"/wrf-*"$YY2-$mm2-${dd2}_${HH2}PHT.png" "${remotes[$r]}:${web_dirs[$r]}/resources/model/web_img/"
+  scp "$SRCDIR/web/json/forecast_$YY2-$mm2-${dd2}_${HH2}PHT.json" "${remotes[$r]}:${web_dirs[$r]}/resources/model/"
 done
 
 echo "-----------------------------"
