@@ -15,6 +15,7 @@ from __const__ import (
     domain_land_mask as land_mask,
     trmm,
 )
+from helpers.model_agreement import model_agreement
 
 lon_formatter = LongitudeFormatter(zero_direction_label=True, degree_symbol="")
 lat_formatter = LatitudeFormatter(degree_symbol="")
@@ -99,12 +100,13 @@ def plot_maps(ds, out_dir):
                 ax.set_yticks(lat_labels, crs=plot_proj)
 
                 if var_name == "rainx":
-                    trmm2 = trmm.isel(time=da.time.dt.month.values - 1)
-                    trmm2.name = da.name
-                    trmm2 = trmm2.assign_coords(
-                        time=da.time,
-                    )
-                    extreme_da = np.divide(da, trmm2) * 100
+                    # trmm2 = trmm.isel(time=da.time.dt.month.values - 1)
+                    # trmm2.name = da.name
+                    # trmm2 = trmm2.assign_coords(
+                    #     time=da.time,
+                    # )
+                    # extreme_da = np.divide(da, trmm2) * 100
+                    extreme_da = model_agreement(ds["rain"].isel(time=t))
                 elif var_name == "temp":
                     p = _das[da_name].plot.contour(
                         ax=ax,
@@ -158,8 +160,8 @@ def plot_maps(ds, out_dir):
                         extend="both",
                         cbar_kwargs=dict(shrink=0.5),
                     )
-                if var_name == "rainx":
-                    da.where(extreme_da < 100).plot.contourf(
+                if var_name == "rainx":  # from previous < 100 to < 2
+                    da.where(extreme_da < 2).plot.contourf(
                         ax=ax,
                         transform=plot_proj,
                         levels=levels,
