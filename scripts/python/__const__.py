@@ -66,96 +66,131 @@ rain_color = [
     "#af0000",
 ]
 
-rain_levs = [5, 10, 20, 30, 50, 100, 150, 200, 250]
+rain_levs_24hr = [5, 10, 20, 30, 50, 100, 150, 200, 250]
+rain_levs_3hr = [5, 10, 20, 30, 50, 75, 100, 125, 150]
 
 plot_vars = {
+    "temp": {
+            "title": "Air (2m) and Sea Surface Temperature [°C]",
+            "units": "°C",
+            "levels": range(20, 42, 2),
+            "colors": sns.blend_palette(
+                ["#f0e68c", "#ff4500", "#9932cc", "#000000"], n_colors=12
+            ),
+        },
+        "hi": {
+            "title": "Heat Index [°C]",
+            "units": "°C",
+            "levels": [27, 32, 41, 54],
+            "colors": sns.blend_palette(
+                ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
+            ),
+        },
+        "hix": {
+            "title": "Maximum Heat Index [°C]",
+            "units": "°C",
+            "levels": [27, 32, 41, 54],
+            "colors": sns.blend_palette(
+                ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
+            ),
+        },
+        "rh": {
+            "title": "Relative Humidity (2m)[%]",
+            "units": "%",
+            "levels": range(30, 110, 10),
+            "colors": sns.blend_palette(
+                [
+                    "#d7191c",
+                    "#fdae61",
+                    "#ffffbf",
+                    "#abdda4",
+                    "#2b83ba",
+                ],
+                n_colors=9,
+            ),
+        },
+        "wind": {
+            "title": "Winds (850mb)[m/s]",
+            "units": "m/s",
+            "levels": range(10, 70, 10),
+            "colors": [(0, 0, 0)]
+            + sns.blend_palette(
+                [
+                    "#2b83ba",
+                    "#abdda4",
+                    "#ffffbf",
+                    "#fdae61",
+                    "#d7191c",
+                ],
+                n_colors=6,
+            ),
+        },
+        "wpd": {
+            "title": "-Hr Total Wind Power Potential [MW/hectare]",
+            "units": "MW/\nhectare",
+            "levels": [2.1, 3.2, 4.2, 5.2, 6.2, 8.3],
+            "colors": [
+                "#ffffff",
+                "#ffb302",
+                "#ffeb00",
+                "#9beb4a",
+                "#32db80",
+                "#01b4ff",
+                "#0064ff",
+                "#000096",
+            ],
+        },
+}
+
+plot_vars_24hr = {
     "rain": {
-        "title": "-Hr Total Rainfall [mm]",
-        "units": "mm",
-        "levels": rain_levs,
+        "title": "24-Hr Total Rainfall [mm/24hrs]",
+        "units": "mm/\n24hrs",
+        "levels": rain_levs_24hr,
         "colors": rain_color,
         "ens_mem": True,
     },
     "rainx": {
         "title": "Areas with Potential Extreme Rainfall",
-        "units": "mm",
-        "levels": rain_levs,
+        "units": "mm/\n24hrs",
+        "levels": rain_levs_24hr,
         "colors": rain_color,
     },
-    "temp": {
-        "title": "Air (2m) and Sea Surface Temperature [°C]",
-        "units": "°C",
-        "levels": range(20, 42, 2),
-        "colors": sns.blend_palette(
-            ["#f0e68c", "#ff4500", "#9932cc", "#000000"], n_colors=12
-        ),
-    },
-    "hi": {
-        "title": "Heat Index [°C]",
-        "units": "°C",
-        "levels": [27, 32, 41, 54],
-        "colors": sns.blend_palette(
-            ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
-        ),
-    },
-    "hix": {
-        "title": "Maximum Heat Index [°C]",
-        "units": "°C",
-        "levels": [27, 32, 41, 54],
-        "colors": sns.blend_palette(
-            ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
-        ),
-    },
-    "rh": {
-        "title": "Relative Humidity (2m)[%]",
-        "units": "%",
-        "levels": range(30, 110, 10),
+    "ppv": {
+        "title": "-Hr Total Solar Power Potential [MW/hectare]",
+        "units": "MW/\nhectare",
+        "levels": [1, 2.4, 3.8, 5.2, 6.6, 8],
         "colors": sns.blend_palette(
             [
-                "#d7191c",
-                "#fdae61",
-                "#ffffbf",
-                "#abdda4",
-                "#2b83ba",
+                "#66cdaa",
+                "#f0e68c",
+                "#ff8c00",
+                "#b22222",
             ],
-            n_colors=9,
+            n_colors=7,
         ),
     },
-    "wind": {
-        "title": "Winds (850mb)[m/s]",
-        "units": "m/s",
-        "levels": range(10, 70, 10),
-        "colors": [(0, 0, 0)]
-        + sns.blend_palette(
-            [
-                "#2b83ba",
-                "#abdda4",
-                "#ffffbf",
-                "#fdae61",
-                "#d7191c",
-            ],
-            n_colors=6,
-        ),
+
+}
+
+plot_vars_3hr = {
+    "rain": {
+        "title": "3-Hr Total Rainfall [mm/3hrs]",
+        "units": "mm/\n3hrs",
+        "levels": rain_levs_3hr,
+        "colors": rain_color,
+        "ens_mem": True,
     },
-    "wpd": {
-        "title": "-Hr Total Wind Power Potential [MW]",
-        "units": "MW",
-        "levels": [2.1, 3.2, 4.2, 5.2, 6.2, 8.3],
-        "colors": [
-            "#ffffff",
-            "#ffb302",
-            "#ffeb00",
-            "#9beb4a",
-            "#32db80",
-            "#01b4ff",
-            "#0064ff",
-            "#000096",
-        ],
+    "rainx": {
+        "title": "Areas with Potential Extreme Rainfall",
+        "units": "mm/\n3hrs",
+        "levels": rain_levs_3hr,
+        "colors": rain_color,
     },
     "ppv": {
-        "title": "-Hr Total Solar Power Potential [MW]",
-        "units": "MW",
-        "levels": [1, 2.4, 3.8, 5.2, 6.6, 8],
+        "title": "-Hr Total Solar Power Potential [MW/hectare]",
+        "units": "MW/\nhectare",
+        "levels": [1, 1.6, 2.2, 2.8, 3.4, 4],
         "colors": sns.blend_palette(
             [
                 "#66cdaa",
@@ -182,18 +217,6 @@ plot_vars_web = {
             "#000096",
         ],
     },
-    "ppv": {
-        "levels": [1, 2.4, 3.8, 5.2, 6.6, 8],
-        "colors": sns.blend_palette(
-            [
-                "#66cdaa",
-                "#f0e68c",
-                "#ff8c00",
-                "#b22222",
-            ],
-            n_colors=7,
-        ),
-    },
     "temp": {
         "levels": range(20, 42, 2),
         "colors": sns.blend_palette(
@@ -216,6 +239,18 @@ plot_vars_web = {
         "levels": range(10, 70, 10),
         "colors": sns.color_palette(
             "RdPu",
+            n_colors=7,
+        ),
+    },
+    "ppv": {
+        "levels": [1, 2.4, 3.8, 5.2, 6.6, 8],
+        "colors": sns.blend_palette(
+            [
+                "#66cdaa",
+                "#f0e68c",
+                "#ff8c00",
+                "#b22222",
+            ],
             n_colors=7,
         ),
     },

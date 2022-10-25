@@ -12,6 +12,8 @@ from __const__ import (
     plot_proj,
     wrf_forecast_days,
     plot_vars,
+    plot_vars_3hr,
+    plot_vars_24hr,
     domain_land_mask as land_mask,
     trmm,
 )
@@ -31,13 +33,21 @@ def plot_maps(ds, out_dir):
     init_dt_str = init_dt.strftime("%Y-%m-%d %H")
     tsteps = len(ds.time)
     hr_interval = int(24 * wrf_forecast_days / tsteps)
-
-    for var_name, var_info in plot_vars.items():
+    
+    plot_var_items = plot_vars
+    if hr_interval == 3:
+        plot_var_items.update(plot_vars_3hr)
+    else:
+        plot_var_items.update(plot_vars_24hr)
+    for var_name, var_info in plot_var_items.items():
         print(f"Plotting {var_name}...")
+
         levels = var_info["levels"]
         colors = var_info["colors"]
-        if var_name in ["rain", "wpd", "ppv"]:
-            title = str(hr_interval) + var_info["title"]
+        interval_str = str(hr_interval)
+        units = f"[{var_info['units']}]"
+        if var_name in ["wpd", "ppv"]:
+            title = interval_str + var_info["title"]
         else:
             title = var_info["title"]
 
@@ -98,6 +108,8 @@ def plot_maps(ds, out_dir):
                 ax.yaxis.set_major_formatter(lat_formatter)
                 ax.set_xticks(lon_labels, crs=plot_proj)
                 ax.set_yticks(lat_labels, crs=plot_proj)
+                ax.coastlines()
+                ax.set_extent((*xlim, *ylim))
 
                 if var_name == "rainx":
                     # trmm2 = trmm.isel(time=da.time.dt.month.values - 1)
@@ -120,17 +132,20 @@ def plot_maps(ds, out_dir):
                 elif var_name == "wind":
                     cmap = ListedColormap(colors)
                     norm = BoundaryNorm(levels, cmap.N, extend="both")
-                    p = plt.barbs(
+                    
+                    p = plt.streamplot(
                         u.lon.values,
                         u.lat.values,
                         u.values,
                         v.values,
-                        da.values,
-                        length=5.5,
+                        density=1,
+                        color=da.values,
+                        linewidth=0.5,
                         cmap=cmap,
                         norm=norm,
                         transform=plot_proj,
                     )
+                    p = p.lines
                     plt.colorbar(p, ticks=levels, shrink=0.5)
                 elif var_name == "ppv":
                     da = da.salem.roi(roi=land_mask.mask)
@@ -172,12 +187,10 @@ def plot_maps(ds, out_dir):
                         add_colorbar=False,
                     )
                 p.colorbar.ax.set_title(
-                    f"[{var_info['units']}]",
+                    units,
                     pad=20 * fig_scale,
                     fontsize=10 * fig_scale,
                 )
-                ax.coastlines()
-                ax.set_extent((*xlim, *ylim))
                 if var_name in ["wpd", "ppv"]:
                     ax.annotate(
                         "$^{*}$Philippine landmass only",
