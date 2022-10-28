@@ -23,7 +23,6 @@ def plot_timeseries(ds, out_dir):
     t_range = pd.date_range(init_dt, periods=121, freq="H")
     x_range = range(0, site_df.shape[0])
 
-    x_major_step = 24
     x_minor_step = 6
     t_major_ticks = t_range[t_range.hour == 0]
     t_minor_ticks = t_range[(t_range.hour % x_minor_step) == 0]
@@ -33,7 +32,7 @@ def plot_timeseries(ds, out_dir):
     fig, axs = plt.subplots(ncols=1, nrows=5, figsize=(25, 25), constrained_layout=True)
 
     # region plot rainfall
-    site_df.plot.bar(y="rain", edgecolor="blue", facecolor="blue", ax=axs[0], label="_")
+    site_df.plot.bar(y="rain", edgecolor="blue", facecolor="blue", ax=axs[0], label="_", zorder=5)
     _ax = axs[0].twiny()
 
     _t_major_ticks = t_major_ticks - timedelta(hours=12)
@@ -185,7 +184,7 @@ def plot_timeseries(ds, out_dir):
         markersize=12,
         ax=axs[2],
     )
-    y_range = [10] * len(x_range)
+    y_range = [20] * len(x_range)
     axs[2].quiver(
         t_range,
         y_range,
@@ -211,7 +210,7 @@ def plot_timeseries(ds, out_dir):
 
     axs[2].tick_params(axis="y", labelsize=24)
     axs[2].set_ylabel("Wind Speed (m/s)", fontsize=24, color="black")
-    axs[2].set_ylim([0, 20])
+    axs[2].set_ylim([0, 40])
 
     axs[2].grid(which="major", axis="x", c="gray", ls="dotted")
     # endregion plot wind speed and wind barbs
