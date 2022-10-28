@@ -32,7 +32,7 @@ def mask(ds):
 
 
 def interpd(_newx, _vals, _idxs):
-    return interp1d(_vals, _idxs, bounds_error=False, fill_value=0)(_newx)
+    return interp1d(_vals, _idxs, bounds_error=False, fill_value="extrapolate")(_newx)
 
 
 def ARIinterp(_newx):
