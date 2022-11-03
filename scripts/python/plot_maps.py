@@ -83,8 +83,8 @@ def plot_maps(ds, out_dir):
                 _v = ds["v_850hPa"].isel(time=t).mean("ens")
                 u = _u[::20, ::20]
                 v = _v[::20, ::20]
-                da = u.copy()
-                da.values = (u.values**2 + v.values**2) ** 0.5
+                da = _u.copy()
+                da.values = (_u.values**2 + _v.values**2) ** 0.5
                 das = {"ens": da}
             else:
                 continue
@@ -130,23 +130,28 @@ def plot_maps(ds, out_dir):
                     )
                     ax.clabel(p, p.levels, inline=True, fontsize=6 * fig_scale)
                 elif var_name == "wind":
-                    cmap = ListedColormap(colors)
-                    norm = BoundaryNorm(levels, cmap.N, extend="both")
                     
-                    p = plt.streamplot(
+                    plt.streamplot(
                         u.lon.values,
                         u.lat.values,
                         u.values,
                         v.values,
                         density=1,
-                        color=da.values,
+                        color="k",
                         linewidth=0.5,
-                        cmap=cmap,
-                        norm=norm,
                         transform=plot_proj,
                     )
-                    p = p.lines
-                    plt.colorbar(p, ticks=levels, shrink=0.5)
+
+                    p = da.plot.contourf(
+                        ax=ax,
+                        transform=plot_proj,
+                        levels=levels,
+                        colors=colors,
+                        add_labels=False,
+                        extend="both",
+                        cbar_kwargs=dict(shrink=0.5),
+                    )
+                    plt.gca().set_facecolor("grey")  
                 elif var_name == "ppv":
                     da = da.salem.roi(roi=land_mask.mask)
 

@@ -113,7 +113,7 @@ plot_vars = {
             "title": "Winds (850mb)[m/s]",
             "units": "m/s",
             "levels": range(10, 70, 10),
-            "colors": [(0, 0, 0)]
+            "colors": [(1, 1, 1)]
             + sns.blend_palette(
                 [
                     "#2b83ba",
