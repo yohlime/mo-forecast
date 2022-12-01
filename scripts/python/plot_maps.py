@@ -136,7 +136,7 @@ def plot_maps(ds, out_dir):
                         u.lat.values,
                         u.values,
                         v.values,
-                        density=1,
+                        density=2,
                         color="k",
                         linewidth=0.5,
                         transform=plot_proj,
