@@ -11,7 +11,7 @@ from __const__ import wrf_dirs
 from helpers.wrfpost import create_hour_ds, create_interval_ds, save_to_netcdf
 from plot_maps import plot_maps
 from plot_ts import plot_timeseries
-from plot_web_maps import plot_web_maps
+from plot_ecw_web_maps import plot_web_maps
 from extract_points import extract_points
 from plot_hi_gauge import plot_gauge
 from plot_ari_maps import plot_ari

@@ -47,8 +47,14 @@ def plot_web_maps(ds, out_dir):
             for plt_type in plt_types:
                 if plt_type == "max":
                     da = _da.max("ens")
+                    if var_name == "wind":
+                        _u = u.max("ens")
+                        _v = v.max("ens")
                 elif plt_type == "min":
                     da = _da.min("ens")
+                    if var_name == "wind":
+                        _u = u.min("ens")
+                        _v = v.min("ens")
                 elif plt_type == "sum":
                     da = _da.sum("ens")
                 else:
@@ -57,6 +63,7 @@ def plot_web_maps(ds, out_dir):
 
                 fig = plt.figure(figsize=(4, 5), constrained_layout=True)
                 ax = plt.axes(projection=plot_proj)
+                
                 da.plot.contourf(
                     ax=ax,
                     transform=plot_proj,
@@ -66,6 +73,20 @@ def plot_web_maps(ds, out_dir):
                     add_colorbar=False,
                     extend=cbar_extend,
                 )
+
+                if var_name == "wind":
+                    
+                    plt.streamplot(
+                        _u.lon.values,
+                        _u.lat.values,
+                        _u.values,
+                        _v.values,
+                        density=2,
+                        color="white",
+                        linewidth=0.5,
+                        transform=plot_proj,
+                    ) 
+
                 plt.axis("off")
                 # ph_gdf.plot(ax=ax, facecolor="none")
                 ax.set_extent((*xlim, *ylim))
