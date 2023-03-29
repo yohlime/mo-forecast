@@ -20,7 +20,7 @@ mkdir -p "$DL_LOG_DIR"
 SDATE=$(date -d "${FCST_YY}-${FCST_MM}-${FCST_DD} ${FCST_ZZ}:00:00 10 hours ago" +'%Y-%m-%d %H:%M:%S')
 
 # URL Download AWS via website
-NOW_DIR=(https://panahon.observatory.ph/api/stations.php?24hr\&type=csv)
+NOW_DIR=(https://panahon.observatory.ph/api/stations/24hr/csv)
 
 # Create download list
 touch "${DL_LIST}"
