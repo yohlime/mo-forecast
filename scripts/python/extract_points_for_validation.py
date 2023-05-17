@@ -10,6 +10,7 @@ from __const__ import tz, script_dir
 
 site_df = pd.read_csv(script_dir / "python/resources/csv/stations_lufft.csv")
 
+
 def extract_points_for_validation(ds_dict, out_dir):
     init_dt = pd.to_datetime(
         list(ds_dict.values())[0].time.values[0], utc=True
@@ -82,7 +83,10 @@ def extract_points_for_validation(ds_dict, out_dir):
         out_df.append(_out_df)
 
     out_df = pd.DataFrame(out_df)
-    out_file = Path(out_dir) / f"forecast_lufft_stations_{init_dt.strftime('%Y-%m-%d_%H')}PHT.json"
+    out_file = (
+        Path(out_dir)
+        / f"forecast_lufft_stations_{init_dt.strftime('%Y-%m-%d_%H')}PHT.json"
+    )
     out_file.parent.mkdir(parents=True, exist_ok=True)
     out_df.set_index("id").to_json(
         out_file, orient="index", indent=2, double_precision=2
