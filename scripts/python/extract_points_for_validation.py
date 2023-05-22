@@ -1,6 +1,6 @@
 # Description: Extract fcst at station locations for validation
 # Author: Kevin Henson
-# Last edited: May 26, 2022
+# Last edited: May 19, 2023
 
 from pathlib import Path
 import pandas as pd
@@ -10,21 +10,30 @@ from __const__ import tz, script_dir
 
 site_df = pd.read_csv(script_dir / "python/resources/csv/stations_lufft.csv")
 
+def extract_ensemble_values(_ds, ds, var, ens_num):
+        print(f"Processing {var}...")
+        da = ds[var].mean("ens")
+        da.name = f"{var}_ensmean"
+        _ds.append(da)
+
+        for n in range(0,ens_num):
+            da = ds[var].sel(ens=n, drop=True)
+            da.name = f"{var}_ens{n+1}"
+            _ds.append(da)
 
 def extract_points_for_validation(ds_dict, out_dir):
     init_dt = pd.to_datetime(
         list(ds_dict.values())[0].time.values[0], utc=True
     ).astimezone(tz)
 
+    ens_num = len(ds_dict['hr'].coords['ens'])
     new_ds_dict = {}
     for k, ds in ds_dict.items():
         _ds = []
 
         # region temp
-        print("Processing temperature...")
-        da = ds["temp"].mean("ens")
-        da.name = "temp"
-        _ds.append(da)
+        extract_ensemble_values(_ds, ds, "temp", ens_num)
+
         da = ds["temp"].min("ens")
         da.name = "tempMin"
         _ds.append(da)
@@ -34,30 +43,22 @@ def extract_points_for_validation(ds_dict, out_dir):
         # end region temp
 
         # region rain
-        print("Processing chance of rain...")
         _da = ds["rain"]
 
-        da = _da.mean("ens")
-        da.name = "rain"
-        _ds.append(da)
+        extract_ensemble_values(_ds, ds, "rain", ens_num)
         # end region rain
 
         # region relative humidity
-        print("Processing relative humidiy...")
         _da = ds["rh"]
 
-        da = _da.mean("ens")
-        da.name = "rh"
-        _ds.append(da)
+        extract_ensemble_values(_ds, ds, "rh", ens_num)
         # end region relative humidity
 
         # region heat index
         print("Processing heat index...")
         _da = ds["hi"]
 
-        da = _da.mean("ens")
-        da.name = "hi"
-        _ds.append(da)
+        extract_ensemble_values(_ds, ds, "hi", ens_num)
         # end region heat index
 
         new_ds_dict[k] = xr.merge(_ds)
