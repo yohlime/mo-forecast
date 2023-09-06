@@ -7,7 +7,7 @@
 - bash environment
 - slurm
 - preinstalled WRF system
-- python 3.7+
+- python 3.9+
 
 ### 1. Clone the repo
 ```
@@ -17,7 +17,7 @@ git clone https://github.com/ecwmo/mo-forecast.git ~/forecast
 ### 2. Install conda environment
 ```
 cd ~/forecast
-conda env create -f ./venv.yaml -p ./venv
+mamba env create -f ./venv.yaml -p ./venv
 ```
 
 ### 3. Create a configuration file
