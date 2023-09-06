@@ -11,7 +11,7 @@
 
 ### 1. Clone the repo
 ```
-git clone http://rcs.observatory.ph/git/egozo/mo_forecast.git ~/forecast
+git clone https://github.com/ecwmo/mo-forecast.git ~/forecast
 ```
 
 ### 2. Install conda environment
