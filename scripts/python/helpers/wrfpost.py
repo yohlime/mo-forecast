@@ -1,4 +1,4 @@
-from typing import List
+from typing import Optional, Union
 from pathlib import Path
 from tqdm import tqdm
 from datetime import timedelta
@@ -24,7 +24,9 @@ VARS = {
 }
 
 
-def get_hour_ds(date_str: str = "", src_dir: Path = None) -> xr.Dataset:
+def get_hour_ds(
+    date_str: Optional[str] = "", src_dir: Union[Path, str, None] = None
+) -> Optional[xr.Dataset]:
     """Retrieve hourly dataset from post-processed WRF output
 
     Args:
@@ -32,7 +34,7 @@ def get_hour_ds(date_str: str = "", src_dir: Path = None) -> xr.Dataset:
         src_dir (str or Path, optional): Source directory. Defaults to data_dir/"nc".
 
     Returns:
-        xr.Dataset or None: hourly Dataset
+        xarray.Dataset or None: hourly Dataset
     """
     if src_dir is None:
         conf = Config()
@@ -40,7 +42,7 @@ def get_hour_ds(date_str: str = "", src_dir: Path = None) -> xr.Dataset:
     elif not isinstance(src_dir, Path):
         src_dir = Path(src_dir)
 
-    if date_str != "":
+    if (date_str != "") or (date_str is not None):
         files = list(src_dir.glob(f"*{date_str}.nc"))
     else:
         files = sorted(src_dir.glob("*.nc"), reverse=True)
@@ -54,8 +56,8 @@ def get_hour_ds(date_str: str = "", src_dir: Path = None) -> xr.Dataset:
 
 def create_hour_ds(
     wrfin,
-    include_vars: List[str] = None,
-    exclude_vars: List[str] = None,
+    include_vars: Optional[list[str]] = None,
+    exclude_vars: Optional[list[str]] = None,
 ) -> xr.Dataset:
     """Create hourly dataset from WRF-ARW netCDF data
 
@@ -63,12 +65,12 @@ def create_hour_ds(
         wrfin (netCDF4.Dataset, Nio.NioFile, or an iterable): WRF-ARW netCDF
             data as a netCDF4.Dataset, Nio.NioFile or an iterable sequence of
             the aforementioned types.
-        include_vars (List[str], optional): Variables to include.
+        include_vars (list[str], optional): Variables to include.
             Defaults to including all variables.
-        exclude_vars (List[str], optional): Variables to exclude. Defaults to None.
+        exclude_vars (list[str], optional): Variables to exclude. Defaults to None.
 
     Returns:
-        xr.Dataset: hourly Dataset
+        xarray.Dataset: hourly Dataset
     """
     conf = Config()
     nt = conf.wrf_forecast_days * 24 + 1
@@ -132,10 +134,10 @@ def create_interval_ds(hr_ds: xr.Dataset, hr_interval) -> xr.Dataset:
     """Create daily dataset from processed hourly data
 
     Args:
-        hr_ds (xr.Dataset): processed WRF hourly data
+        hr_ds (xarray.Dataset): processed WRF hourly data
 
     Returns:
-        xr.Dataset: daily Dataset
+        xarray.Dataset: daily Dataset
     """
     conf = Config()
     var_names = list(hr_ds.keys())
@@ -197,7 +199,7 @@ def save_to_netcdf(ds: xr.Dataset, out_file: Path):
     """Save as netCDF file
 
     Args:
-        ds (xr.Dataset): input data
+        ds (xarray.Dataset): input data
         out_file (Path): file path
     """
     ds.lon.attrs["units"] = "degrees_east"

@@ -1,26 +1,32 @@
+from typing import Optional
+import numpy.typing as npt
+import netCDF4
+import xarray as xr
+
 import numpy as np
 from wrf import getvar, interplevel
 import metpy.calc as mpcalc
 from metpy.units import units
 
 
-def wrf_getvar(wrfin, varname, timeidx=0, levels=None, interp=None):
+def wrf_getvar(
+    wrfin: netCDF4.Dataset,
+    varname: str,
+    timeidx=0,
+    levels: Optional[npt.NDArray[np.float32]] = None,
+    interp: Optional[str] = None,
+) -> xr.DataArray:
     """Wrapper around wrf-python's getvar
 
     Args:
-        wrfin (`netCDF4.Dataset`, `Nio.NioFile`, or an iterable): WRF-ARW NetCDF
-            data as a `netCDF4.Dataset`, `Nio.NioFile` or an iterable sequence of
-            the aforementioned types.
-        varname (str): The variable name
+        wrfin (netCDF4.Dataset): WRF-ARW NetCDF data.
+        varname (str): The variable name.
         timeidx (int, optional): The desired time index. Defaults to 0.
-        levels (List[float] or `numpy.ndarray`, optional): Desired levels.
-            Defaults to None.
+        levels (numpy.NDArray[float], optional): Desired levels. Defaults to None.
         interp (str, optional): Type of vertical interpolation. Defaults to None.
 
     Returns:
-        If xarray is enabled and the meta parameter is True, then the result will be a
-        `xarray.DataArray` object. Otherwise, the result will be a `numpy.ndarray`
-        object with no metadata.
+        xarray.DataArray: The extracted variable.
     """
     if varname == "prcp":
         da = getvar(wrfin, "RAINC", timeidx) + getvar(wrfin, "RAINNC", timeidx).values
@@ -31,13 +37,10 @@ def wrf_getvar(wrfin, varname, timeidx=0, levels=None, interp=None):
         da = heat_index(t, rh)
         da.name = "hi"
     elif varname == "wpd":
-        # wspd = wrf_getvar(wrfin, "wspd_wdir", timeidx, levels=80, interp="height_agl")[
-        #     0, :
-        # ]
         u = wrf_getvar(wrfin, "ua", timeidx, levels=80, interp="height_agl")
         v = wrf_getvar(wrfin, "va", timeidx, levels=80, interp="height_agl")
         wspd = u.copy()
-        wspd.values = (u.values ** 2 + v.values ** 2) ** 0.5
+        wspd.values = (u.values**2 + v.values**2) ** 0.5
         da = wind_power_density(wspd)
         da.name = "wpd"
     elif varname == "ppv":
@@ -67,15 +70,15 @@ def wrf_getvar(wrfin, varname, timeidx=0, levels=None, interp=None):
     return da
 
 
-def heat_index(t, rh):
+def heat_index(t: xr.DataArray, rh: xr.DataArray) -> xr.DataArray:
     """Computes Heat Index based on Rothfusz (1990).
 
     Args:
-        t (xarray.DataArray): Air Temperature in °C
-        rh (xarray.DataArray): Relative Humidity
+        t (xarray.DataArray): Air Temperature in °C.
+        rh (xarray.DataArray): Relative Humidity.
 
     Returns:
-        xarray.DataArray: Heat Index in °C
+        xarray.DataArray: Heat Index in °C.
     """
     _t = t * units.degC
     _rh = rh * units.percent
@@ -86,7 +89,7 @@ def heat_index(t, rh):
     return hi.metpy.convert_units(units.degC).metpy.dequantify()
 
 
-def wind_power_density(wspd):
+def wind_power_density(wspd: xr.DataArray) -> xr.DataArray:
     """Computes wind power density
 
     Args:
@@ -103,11 +106,13 @@ def wind_power_density(wspd):
     turb = 4  # assume 4 wind turbines in one hectare
     swarea = 8495  # swept area of turbine
 
-    wpd = turb * (a * rho * swarea * cp * wspd ** 3)
+    wpd = turb * (a * rho * swarea * cp * wspd**3)
     return wpd / 1000000
 
 
-def pv_power_potential(swddni, coszen, swddif, t):
+def pv_power_potential(
+    swddni: xr.DataArray, coszen: xr.DataArray, swddif: xr.DataArray, t: xr.DataArray
+) -> xr.DataArray:
     """Computes PV Power Potential
 
     Args:
@@ -139,7 +144,9 @@ def pv_power_potential(swddni, coszen, swddif, t):
     return ppv * spanel / 1000000
 
 
-def global_horizontal_irradiance(swddni, coszen, swddif):
+def global_horizontal_irradiance(
+    swddni: xr.DataArray, coszen: xr.DataArray, swddif: xr.DataArray
+) -> xr.DataArray:
     """Computes Global Horizontal Irradiance (W m-2)
 
     Args:
