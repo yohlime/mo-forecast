@@ -2,9 +2,7 @@ from pathlib import Path
 import pandas as pd
 import xarray as xr
 
-from __const__ import tz, script_dir
-
-site_df = pd.read_csv(script_dir / "python/resources/csv/cities.csv")
+from config import Config
 
 
 def rain_chance_str(val):
@@ -19,9 +17,12 @@ def rain_chance_str(val):
 
 
 def extract_points(ds_dict, out_dir):
+    conf = Config()
+    site_df = pd.read_csv(conf.script_dir / "python/resources/csv/cities.csv")
+
     init_dt = pd.to_datetime(
         list(ds_dict.values())[0].time.values[0], utc=True
-    ).astimezone(tz)
+    ).astimezone(conf.tz)
 
     new_ds_dict = {}
     for k, ds in ds_dict.items():
@@ -39,7 +40,7 @@ def extract_points(ds_dict, out_dir):
         da = ds["wpd"].max("ens")
         da.name = "wndPowMax"
         _ds.append(da)
-        # end region wpd
+        # endregion wpd
 
         # region ppv
         print("Processing ppv...")
@@ -53,7 +54,7 @@ def extract_points(ds_dict, out_dir):
         da = ds["ppv"].max("ens")
         da.name = "solPowMax"
         _ds.append(da)
-        # end region ppv
+        # endregion ppv
 
         # region temp
         print("Processing temperature...")
@@ -66,14 +67,14 @@ def extract_points(ds_dict, out_dir):
         da = ds["temp"].max("ens")
         da.name = "tempMax"
         _ds.append(da)
-        # end region temp
+        # endregion temp
 
         # region wind
         print("Processing wind...")
         u = ds["u_850hPa"]
         v = ds["v_850hPa"]
         _da = u.copy()
-        _da.values = (u.values ** 2 + v.values ** 2) ** 0.5
+        _da.values = (u.values**2 + v.values**2) ** 0.5
         _da.values = _da.values * 3.6  # convert to kph
 
         da = _da.mean("ens")
@@ -85,7 +86,7 @@ def extract_points(ds_dict, out_dir):
         da = _da.max("ens")
         da.name = "wspdMax"
         _ds.append(da)
-        # end region wind
+        # endregion wind
 
         # region rain
         print("Processing chance of rain...")
@@ -100,7 +101,7 @@ def extract_points(ds_dict, out_dir):
         da = _da.mean("ens")
         da.name = "rainChance"
         _ds.append(da)
-        # end region rain
+        # endregion rain
 
         # region relative humidity
         print("Processing relative humidiy...")
@@ -109,7 +110,7 @@ def extract_points(ds_dict, out_dir):
         da = _da.mean("ens")
         da.name = "rh"
         _ds.append(da)
-        # end region relative humidity
+        # endregion relative humidity
 
         # region heat index
         print("Processing heat index...")
@@ -118,7 +119,7 @@ def extract_points(ds_dict, out_dir):
         da = _da.mean("ens")
         da.name = "hi"
         _ds.append(da)
-        # end region heat index
+        # endregion heat index
 
         new_ds_dict[k] = xr.merge(_ds)
 
@@ -133,7 +134,7 @@ def extract_points(ds_dict, out_dir):
             _df["timestamp"] = (
                 _df["timestamp"]
                 .dt.tz_localize("UTC")
-                .dt.tz_convert(tz)
+                .dt.tz_convert(conf.tz)
                 .dt.strftime("%Y-%m-%dT%H:00:00")
             )
             _df["rainChanceStr"] = _df["rainChance"].apply(rain_chance_str)

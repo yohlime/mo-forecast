@@ -1,22 +1,17 @@
 from datetime import timedelta
-import numpy as np
 import pandas as pd
 
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap, BoundaryNorm
 
 from __const__ import (
-    tz,
-    plot_proj,
-    wrf_forecast_days,
     plot_vars,
     plot_vars_3hr,
     plot_vars_24hr,
     domain_land_mask as land_mask,
-    trmm,
 )
+from config import Config
 from helpers.model_agreement import model_agreement
 
 lon_formatter = LongitudeFormatter(zero_direction_label=True, degree_symbol="")
@@ -29,11 +24,12 @@ ylim = (5, 20)
 
 
 def plot_maps(ds, out_dir):
-    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(tz)
+    conf = Config()
+    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(conf.tz)
     init_dt_str = init_dt.strftime("%Y-%m-%d %H")
     tsteps = len(ds.time)
-    hr_interval = int(24 * wrf_forecast_days / tsteps)
-    
+    hr_interval = int(24 * conf.wrf_forecast_days / tsteps)
+
     plot_var_items = plot_vars
     if hr_interval == 3:
         plot_var_items.update(plot_vars_3hr)
@@ -77,7 +73,7 @@ def plot_maps(ds, out_dir):
                 das = {"ens": da}
             elif var_name in ["hi", "hix"]:
                 _da = ds[var_name].isel(time=t).mean("ens")
-                das = {"ens": _da.salem.roi(roi=land_mask.mask, crs=plot_proj)}
+                das = {"ens": _da.salem.roi(roi=land_mask.mask, crs=conf.plot_proj)}
             elif var_name == "wind":
                 _u = ds["u_850hPa"].isel(time=t).mean("ens")
                 _v = ds["v_850hPa"].isel(time=t).mean("ens")
@@ -90,7 +86,7 @@ def plot_maps(ds, out_dir):
                 continue
 
             for da_name, da in das.items():
-                dt1 = pd.to_datetime(da.time.values, utc=True).astimezone(tz)
+                dt1 = pd.to_datetime(da.time.values, utc=True).astimezone(conf.tz)
                 dt1_str = dt1.strftime("%Y-%m-%d %H")
                 dt2 = dt1 + timedelta(hours=hr_interval)
                 dt2_str = dt2.strftime("%Y-%m-%d %H")
@@ -103,11 +99,11 @@ def plot_maps(ds, out_dir):
                 fig = plt.figure(
                     figsize=(8 * fig_scale, 9 * fig_scale), constrained_layout=True
                 )
-                ax = plt.axes(projection=plot_proj)
+                ax = plt.axes(projection=conf.plot_proj)
                 ax.xaxis.set_major_formatter(lon_formatter)
                 ax.yaxis.set_major_formatter(lat_formatter)
-                ax.set_xticks(lon_labels, crs=plot_proj)
-                ax.set_yticks(lat_labels, crs=plot_proj)
+                ax.set_xticks(lon_labels, crs=conf.plot_proj)
+                ax.set_yticks(lat_labels, crs=conf.plot_proj)
                 ax.coastlines()
                 ax.set_extent((*xlim, *ylim))
 
@@ -122,7 +118,7 @@ def plot_maps(ds, out_dir):
                 elif var_name == "temp":
                     p = _das[da_name].plot.contour(
                         ax=ax,
-                        transform=plot_proj,
+                        transform=conf.plot_proj,
                         levels=range(28, 32),
                         colors="#ffffff",
                         add_labels=False,
@@ -130,7 +126,6 @@ def plot_maps(ds, out_dir):
                     )
                     ax.clabel(p, p.levels, inline=True, fontsize=6 * fig_scale)
                 elif var_name == "wind":
-                    
                     plt.streamplot(
                         u.lon.values,
                         u.lat.values,
@@ -139,19 +134,19 @@ def plot_maps(ds, out_dir):
                         density=2,
                         color="k",
                         linewidth=0.5,
-                        transform=plot_proj,
+                        transform=conf.plot_proj,
                     )
 
                     p = da.plot.contourf(
                         ax=ax,
-                        transform=plot_proj,
+                        transform=conf.plot_proj,
                         levels=levels,
                         colors=colors,
                         add_labels=False,
                         extend="both",
                         cbar_kwargs=dict(shrink=0.5),
                     )
-                    plt.gca().set_facecolor("grey")  
+                    plt.gca().set_facecolor("grey")
                 elif var_name == "ppv":
                     da = da.salem.roi(roi=land_mask.mask)
 
@@ -173,7 +168,7 @@ def plot_maps(ds, out_dir):
                 if var_name != "wind":
                     p = da.plot.contourf(
                         ax=ax,
-                        transform=plot_proj,
+                        transform=conf.plot_proj,
                         levels=levels,
                         colors=colors,
                         add_labels=False,
@@ -183,7 +178,7 @@ def plot_maps(ds, out_dir):
                 if var_name == "rainx":  # from previous < 100 to < 2
                     da.where(extreme_da < 2).plot.contourf(
                         ax=ax,
-                        transform=plot_proj,
+                        transform=conf.plot_proj,
                         levels=levels,
                         colors="white",
                         alpha=1,

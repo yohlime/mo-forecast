@@ -8,12 +8,7 @@ from scipy.interpolate import interp1d
 from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 import matplotlib.pyplot as plt
 
-from __const__ import (
-    tz,
-    plot_proj,
-    wrf_forecast_days,
-    script_dir,
-)
+from config import Config
 
 """ ** INSERT RAINFALL TO ARI FUNCTION HERE ** """
 
@@ -23,8 +18,9 @@ def regrid(ds, _ds_out):
 
 
 def mask(ds):
+    conf = Config()
     _mask = salem.read_shapefile(
-        script_dir / "python/resources/shp/PHL_adm0/PHL_adm0.shp"
+        conf.script_dir / "python/resources/shp/PHL_adm0/PHL_adm0.shp"
     )
     _ds_mask = ds.salem.roi(shape=_mask)
 
@@ -36,7 +32,8 @@ def interpd(_newx, _vals, _idxs):
 
 
 def ARIinterp(_newx):
-    _ph_ari_file = script_dir / "python/resources/nc/PHIL_ARI.nc"
+    conf = Config()
+    _ph_ari_file = conf.script_dir / "python/resources/nc/PHIL_ARI.nc"
     _dat = xr.open_dataset(f"{_ph_ari_file}").rename({"precip": "rain"})
 
     _ari = [1, 2, 5, 10, 25, 30, 50, 100, 200, 500, 1000]
@@ -56,10 +53,12 @@ def ARIinterp(_newx):
 
 
 def input_format(ds):
+    conf = Config()
+
     _ds = ds.mean("ens").rename({"lon": "longitude", "lat": "latitude"})
 
     _trmm = (
-        xr.open_dataset(script_dir / "python/resources/nc/trmm_domain_regrid.nc")
+        xr.open_dataset(conf.script_dir / "python/resources/nc/trmm_domain_regrid.nc")
         .rename({"precipitation": "rain", "lon": "longitude", "lat": "latitude"})
         .sel(longitude=slice(117.375, 126.375), latitude=slice(5.125, 18.875))
         .drop("time_bnds")
@@ -106,30 +105,31 @@ var_name = "rain"
 
 
 def plot_ari(ds, out_dir):
+    conf = Config()
 
     ds = input_format(ds[var_name].to_dataset())
 
-    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(tz)
+    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(conf.tz)
     init_dt_str = init_dt.strftime("%Y-%m-%d %H")
 
     var_info = plot_vars.get("rain")
     levels = var_info["levels"]
     colors = var_info["colors"]
 
-    for t in range(wrf_forecast_days):
+    for t in range(conf.wrf_forecast_days):
         print(f"Day {t+1}...")
 
         fig = plt.figure(figsize=(8, 9), constrained_layout=True)
-        ax = plt.axes(projection=plot_proj)
+        ax = plt.axes(projection=conf.plot_proj)
         ax.xaxis.set_major_formatter(lon_formatter)
         ax.yaxis.set_major_formatter(lat_formatter)
-        ax.set_xticks(lon_labels, crs=plot_proj)
-        ax.set_yticks(lat_labels, crs=plot_proj)
+        ax.set_xticks(lon_labels, crs=conf.plot_proj)
+        ax.set_yticks(lat_labels, crs=conf.plot_proj)
 
         da = ds[var_name].isel(time=t)
         p = da.plot.pcolormesh(
             ax=ax,
-            transform=plot_proj,
+            transform=conf.plot_proj,
             levels=levels,
             colors=colors,
             extend="both",
@@ -143,7 +143,7 @@ def plot_ari(ds, out_dir):
 
         ax.set_extent((*xlim, *ylim))
 
-        dt1 = pd.to_datetime(da.time.values, utc=True).astimezone(tz)
+        dt1 = pd.to_datetime(da.time.values, utc=True).astimezone(conf.tz)
         dt1_str = dt1.strftime("%Y-%m-%d %H")
         dt2 = dt1 + timedelta(days=1)
         dt2_str = dt2.strftime("%Y-%m-%d %H")

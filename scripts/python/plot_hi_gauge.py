@@ -11,12 +11,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.transforms import Bbox
 
-from __const__ import tz, script_dir
-
-dat = pd.read_csv(script_dir / "python/resources/csv/HI_cities.csv")
+from config import Config
 
 
 def dat_format(ds, site_lon, site_lat):
+    conf = Config()
     _site_df = (
         ds.sel(lon=site_lon, lat=site_lat, method="nearest")
         .groupby("time")
@@ -25,7 +24,7 @@ def dat_format(ds, site_lon, site_lat):
     )
     _site_df = (
         _site_df.tz_localize("utc")
-        .tz_convert(tz)
+        .tz_convert(conf.tz)
         .between_time("7:00", "18:00")
         .reset_index()
     )
@@ -72,6 +71,9 @@ def color(ds):
 
 
 def plot_gauge(ds, outdir):
+    conf = Config()
+    dat = pd.read_csv(conf.script_dir / "python/resources/csv/HI_cities.csv")
+
     for i in range(len(dat["NAME"])):
         station_name = dat["NAME"][i]
         site_lat = dat["Latitude"][i]
@@ -89,7 +91,7 @@ def plot_gauge(ds, outdir):
         _init_time = (
             pd.Series(ds["time"].values)
             .dt.tz_localize("utc")
-            .dt.tz_convert(tz)
+            .dt.tz_convert(conf.tz)
             .dt.tz_localize(None)
         )
 

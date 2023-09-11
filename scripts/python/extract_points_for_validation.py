@@ -6,27 +6,30 @@ from pathlib import Path
 import pandas as pd
 import xarray as xr
 
-from __const__ import tz, script_dir
+from config import Config
 
-site_df = pd.read_csv(script_dir / "python/resources/csv/stations_lufft.csv")
 
 def extract_ensemble_values(_ds, ds, var, ens_num):
-        print(f"Processing {var}...")
-        da = ds[var].mean("ens")
-        da.name = f"{var}_ensmean"
+    print(f"Processing {var}...")
+    da = ds[var].mean("ens")
+    da.name = f"{var}_ensmean"
+    _ds.append(da)
+
+    for n in range(0, ens_num):
+        da = ds[var].sel(ens=n, drop=True)
+        da.name = f"{var}_ens{n+1}"
         _ds.append(da)
 
-        for n in range(0,ens_num):
-            da = ds[var].sel(ens=n, drop=True)
-            da.name = f"{var}_ens{n+1}"
-            _ds.append(da)
 
 def extract_points_for_validation(ds_dict, out_dir):
+    conf = Config()
+    site_df = pd.read_csv(conf.script_dir / "python/resources/csv/stations_lufft.csv")
+
     init_dt = pd.to_datetime(
         list(ds_dict.values())[0].time.values[0], utc=True
-    ).astimezone(tz)
+    ).astimezone(conf.tz)
 
-    ens_num = len(ds_dict['hr'].coords['ens'])
+    ens_num = len(ds_dict["hr"].coords["ens"])
     new_ds_dict = {}
     for k, ds in ds_dict.items():
         _ds = []
@@ -40,26 +43,26 @@ def extract_points_for_validation(ds_dict, out_dir):
         da = ds["temp"].max("ens")
         da.name = "tempMax"
         _ds.append(da)
-        # end region temp
+        # endregion temp
 
         # region rain
         _da = ds["rain"]
 
         extract_ensemble_values(_ds, ds, "rain", ens_num)
-        # end region rain
+        # endregion rain
 
         # region relative humidity
         _da = ds["rh"]
 
         extract_ensemble_values(_ds, ds, "rh", ens_num)
-        # end region relative humidity
+        # endregion relative humidity
 
         # region heat index
         print("Processing heat index...")
         _da = ds["hi"]
 
         extract_ensemble_values(_ds, ds, "hi", ens_num)
-        # end region heat index
+        # endregion heat index
 
         new_ds_dict[k] = xr.merge(_ds)
 
@@ -74,7 +77,7 @@ def extract_points_for_validation(ds_dict, out_dir):
             _df["timestamp"] = (
                 _df["timestamp"]
                 .dt.tz_localize("UTC")
-                .dt.tz_convert(tz)
+                .dt.tz_convert(conf.tz)
                 .dt.strftime("%Y-%m-%dT%H:00:00")
             )
             df_dict[k] = _df.to_dict(orient="records")

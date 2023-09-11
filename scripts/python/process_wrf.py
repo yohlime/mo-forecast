@@ -7,7 +7,8 @@ import pandas as pd
 
 from wrf import omp_set_num_threads, omp_get_max_threads
 
-from __const__ import wrf_dirs
+from config import Config
+
 from helpers.wrfpost import create_hour_ds, create_interval_ds, save_to_netcdf
 from plot_maps import plot_maps
 from plot_ts import plot_timeseries
@@ -106,5 +107,7 @@ if __name__ == "__main__":
         elif opt in ("-o", "--odir"):
             out_dir = Path(arg)
             out_dir.mkdir(parents=True, exist_ok=True)
-    wrfin = {f"ens{i}": Dataset(d / wrf_out) for i, d in enumerate(wrf_dirs)}
+
+    conf = Config()
+    wrfin = {f"ens{i}": Dataset(d / wrf_out) for i, d in enumerate(conf.wrf_dirs)}
     main(wrfin, out_dir)

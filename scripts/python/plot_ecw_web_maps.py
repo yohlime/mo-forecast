@@ -2,14 +2,16 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from __const__ import tz, plot_proj, plot_vars_web, ph_land_mask as land_mask
+from __const__ import plot_vars_web, ph_land_mask as land_mask
+from config import Config
 
 xlim = (116, 128)
 ylim = (5, 20)
 
 
 def plot_web_maps(ds, out_dir):
-    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(tz)
+    conf = Config()
+    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(conf.tz)
 
     for var_name, var_info in plot_vars_web.items():
         print(f"Plotting {var_name}...")
@@ -28,7 +30,7 @@ def plot_web_maps(ds, out_dir):
                 u = ds["u_850hPa"].isel(time=t)
                 v = ds["v_850hPa"].isel(time=t)
                 _da = u.copy()
-                _da.values = (u.values ** 2 + v.values ** 2) ** 0.5
+                _da.values = (u.values**2 + v.values**2) ** 0.5
                 plt_types = ["min", "max"]
             elif var_name == "rainchance":
                 _da = ds["rain"].isel(time=t)
@@ -59,14 +61,14 @@ def plot_web_maps(ds, out_dir):
                     da = _da.sum("ens")
                 else:
                     da = _da.mean("ens")
-                da = da.salem.roi(roi=land_mask.mask, crs=plot_proj)
+                da = da.salem.roi(roi=land_mask.mask, crs=conf.plot_proj)
 
                 fig = plt.figure(figsize=(4, 5), constrained_layout=True)
-                ax = plt.axes(projection=plot_proj)
-                
+                ax = plt.axes(projection=conf.plot_proj)
+
                 da.plot.contourf(
                     ax=ax,
-                    transform=plot_proj,
+                    transform=conf.plot_proj,
                     levels=levels,
                     colors=colors,
                     add_labels=False,
@@ -75,7 +77,6 @@ def plot_web_maps(ds, out_dir):
                 )
 
                 if var_name == "wind":
-                    
                     plt.streamplot(
                         _u.lon.values,
                         _u.lat.values,
@@ -84,8 +85,8 @@ def plot_web_maps(ds, out_dir):
                         density=2,
                         color="white",
                         linewidth=0.5,
-                        transform=plot_proj,
-                    ) 
+                        transform=conf.plot_proj,
+                    )
 
                 plt.axis("off")
                 # ph_gdf.plot(ax=ax, facecolor="none")

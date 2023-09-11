@@ -5,7 +5,7 @@ from datetime import timedelta
 import pandas as pd
 import xarray as xr
 
-from __const__ import wrf_forecast_days, data_dir
+from config import Config
 
 from helpers.wrf import wrf_getvar
 
@@ -24,7 +24,7 @@ VARS = {
 }
 
 
-def get_hour_ds(date_str: str = "", src_dir: Path = data_dir / "nc") -> xr.Dataset:
+def get_hour_ds(date_str: str = "", src_dir: Path = None) -> xr.Dataset:
     """Retrieve hourly dataset from post-processed WRF output
 
     Args:
@@ -34,7 +34,10 @@ def get_hour_ds(date_str: str = "", src_dir: Path = data_dir / "nc") -> xr.Datas
     Returns:
         xr.Dataset or None: hourly Dataset
     """
-    if not isinstance(src_dir, Path):
+    if src_dir is None:
+        conf = Config()
+        src_dir = conf.data_dir
+    elif not isinstance(src_dir, Path):
         src_dir = Path(src_dir)
 
     if date_str != "":
@@ -67,7 +70,8 @@ def create_hour_ds(
     Returns:
         xr.Dataset: hourly Dataset
     """
-    nt = wrf_forecast_days * 24 + 1
+    conf = Config()
+    nt = conf.wrf_forecast_days * 24 + 1
     hr_ds = []
 
     _vars = VARS.copy()
@@ -133,8 +137,9 @@ def create_interval_ds(hr_ds: xr.Dataset, hr_interval) -> xr.Dataset:
     Returns:
         xr.Dataset: daily Dataset
     """
+    conf = Config()
     var_names = list(hr_ds.keys())
-    interval_range = range(1, wrf_forecast_days * 24 // hr_interval + 1)
+    interval_range = range(1, conf.wrf_forecast_days * 24 // hr_interval + 1)
     intervalidxs = [interval * hr_interval for interval in interval_range]
     interval_ds = []
 

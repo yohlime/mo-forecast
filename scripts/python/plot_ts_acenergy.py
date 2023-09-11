@@ -4,7 +4,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from __const__ import tz
+from config import Config
 
 # SACASOL
 station_name = "SACASOL"
@@ -15,21 +15,23 @@ station_name2 = "SOLARACE1"
 site_lon2 = 121.22
 site_lat2 = 14.07
 
+
 def plot_ts_ace(ds, out_dir):
-    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(tz)
+    conf = Config()
+    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(conf.tz)
 
     site_df = ds.sel(lon=site_lon, lat=site_lat, method="nearest").to_dataframe()
     site_df = site_df.groupby("time").mean()
-    site_df.index = site_df.index.tz_localize("utc").tz_convert(tz)
+    site_df.index = site_df.index.tz_localize("utc").tz_convert(conf.tz)
 
     site_df2 = ds.sel(lon=site_lon2, lat=site_lat2, method="nearest").to_dataframe()
     site_df2 = site_df2.groupby("time").mean()
-    site_df2.index = site_df2.index.tz_localize("utc").tz_convert(tz)
+    site_df2.index = site_df2.index.tz_localize("utc").tz_convert(conf.tz)
 
     t_range = pd.date_range(init_dt, periods=121, freq="H")
-    x_range = range(0, site_df.shape[0])
+    # x_range = range(0, site_df.shape[0])
 
-    x_major_step = 24
+    # x_major_step = 24
     x_minor_step = 6
     t_major_ticks = t_range[t_range.hour == 0]
     t_minor_ticks = t_range[(t_range.hour % x_minor_step) == 0]
@@ -122,7 +124,7 @@ def plot_ts_ace(ds, out_dir):
     )
     # endregion plot GHI SOLARACE1
     ############### solar energy forecast ##################
-    
+
     # # region plot PPV SACASOL
     # site_df.plot.bar(
     #     y="ppv",

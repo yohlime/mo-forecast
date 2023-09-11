@@ -4,7 +4,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from __const__ import tz
+from config import Config
 
 # MOIP
 
@@ -14,11 +14,12 @@ site_lat = 14.64
 
 
 def plot_timeseries(ds, out_dir):
-    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(tz)
+    conf = Config()
+    init_dt = pd.to_datetime(ds.time.values[0], utc=True).astimezone(conf.tz)
 
     site_df = ds.sel(lon=site_lon, lat=site_lat, method="nearest").to_dataframe()
     site_df = site_df.groupby("time").mean()
-    site_df.index = site_df.index.tz_localize("utc").tz_convert(tz)
+    site_df.index = site_df.index.tz_localize("utc").tz_convert(conf.tz)
 
     t_range = pd.date_range(init_dt, periods=121, freq="H")
     x_range = range(0, site_df.shape[0])
@@ -32,7 +33,9 @@ def plot_timeseries(ds, out_dir):
     fig, axs = plt.subplots(ncols=1, nrows=5, figsize=(25, 25), constrained_layout=True)
 
     # region plot rainfall
-    site_df.plot.bar(y="rain", edgecolor="blue", facecolor="blue", ax=axs[0], label="_", zorder=5)
+    site_df.plot.bar(
+        y="rain", edgecolor="blue", facecolor="blue", ax=axs[0], label="_", zorder=5
+    )
     _ax = axs[0].twiny()
 
     _t_major_ticks = t_major_ticks - timedelta(hours=12)
@@ -176,7 +179,7 @@ def plot_timeseries(ds, out_dir):
     # endregion plot relative humidity
 
     # region plot wind speed and wind barbs
-    wspd = (site_df.u_850hPa ** 2 + site_df.v_850hPa ** 2) ** 0.5
+    wspd = (site_df.u_850hPa**2 + site_df.v_850hPa**2) ** 0.5
     wspd.plot(
         color="black",
         marker=".",
