@@ -2,7 +2,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from __const__ import plot_vars_web, ph_land_mask as land_mask
+from const import plot_vars_web, ph_land_mask as land_mask
 from config import Config
 
 xlim = (116, 128)

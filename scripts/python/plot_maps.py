@@ -5,7 +5,7 @@ from cartopy.mpl.ticker import LongitudeFormatter, LatitudeFormatter
 
 import matplotlib.pyplot as plt
 
-from __const__ import (
+from const import (
     plot_vars,
     plot_vars_3hr,
     plot_vars_24hr,

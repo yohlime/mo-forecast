@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib.colorbar import ColorbarBase
 
-from __const__ import plot_vars_web
+from const import plot_vars_web
 
 
 def main(out_dir):
