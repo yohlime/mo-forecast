@@ -9,19 +9,126 @@ from config import Config
 
 from helpers.wrf import wrf_getvar
 
+
+RAW_VARS = [
+    "RAINC",
+    "RAINNC",
+    "T2",
+    "TSK",
+    "PSFC",
+    "Q2",
+    "HGT",
+    "P",
+    "PH",
+    "PB",
+    "PHB",
+    "U",
+    "V",
+    "SWDDNI",
+    "COSZEN",
+    "SWDDIF",
+]
+
 VARS = {
-    "rain": {"varname": "prcp"},
-    "temp": {"varname": "T2"},
-    "tsk": {"varname": "TSK"},
-    "hi": {"varname": "hi"},
-    "hix": {"varname": "hi"},
-    "rh": {"varname": "rh2"},
-    "u_850hPa": {"varname": "ua", "levels": 850, "interp": "pressure"},
-    "v_850hPa": {"varname": "va", "levels": 850, "interp": "pressure"},
-    "wpd": {"varname": "wpd"},
-    "ppv": {"varname": "ppv"},
-    "ghi": {"varname": "ghi"},
+    "rain": {"varname": "prcp", "vars": ["RAINC", "RAINNC"]},
+    "temp": {"varname": "T2", "vars": ["T2"]},
+    "tsk": {"varname": "TSK", "vars": ["TSK"]},
+    "hi": {"varname": "hi", "vars": ["rh"]},
+    "hix": {"varname": "hi", "vars": ["rh"]},
+    "rh": {"varname": "rh2", "vars": ["T2", "PSFC", "Q2"]},
+    "height_agl": {"varname": "height_agl", "vars": ["P", "PH", "PHB", "HGT"]},
+    "pressure": {"varname": "pressure", "vars": ["P", "PB"]},
+    "u_850hPa": {
+        "varname": "ua",
+        "levels": 850,
+        "interp": "pressure",
+        "vars": ["U", "pressure"],
+    },
+    "v_850hPa": {
+        "varname": "va",
+        "levels": 850,
+        "interp": "pressure",
+        "vars": ["V", "pressure"],
+    },
+    "u_80m": {
+        "varname": "ua",
+        "levels": 80,
+        "interp": "height_agl",
+        "vars": ["U", "height_agl"],
+    },
+    "v_80m": {
+        "varname": "va",
+        "levels": 80,
+        "interp": "height_agl",
+        "vars": ["V", "height_agl"],
+    },
+    "wpd": {"varname": "wpd", "vars": ["u_80m", "v_80m"]},
+    "ppv": {"varname": "ppv", "vars": ["T2", "SWDDNI", "COSZEN", "SWDDIF"]},
+    "ghi": {"varname": "ghi", "vars": ["SWDDNI", "COSZEN", "SWDDIF"]},
 }
+
+
+def get_required_variables(var_name: str) -> list[str]:
+    """Get required variables.
+
+    Args:
+        var_name (str): A valid raw or derived variable name.
+
+    Returns:
+        list[str]: List required variables.
+    """
+    v = []
+    if var_name in VARS:
+        for _v in VARS[var_name]["vars"]:
+            v.extend(get_required_variables(_v))
+    else:
+        v.append(var_name)
+    return list(set(v))
+
+
+def create_wrfout_subset(
+    nc_in: Union[Path, str],
+    nc_out: Union[Path, str],
+    raw_variables: Optional[list[str]] = None,
+    derived_variables: Optional[list[str]] = None,
+    overwrite=False,
+):
+    """Create a subset of wrfout
+
+    Args:
+        nc_in (Path or str): Input wrfout.
+        nc_out (Path or str): Output wrfout subset.
+        raw_variables (list[str], optional): Raw variables to include. Defaults to None.
+        derived_variables (list[str], optional): Derived variable to include. Defaults to None.
+        overwrite (bool, optional): Overwrite the file if it exists. Defaults to False.
+    """
+    ds = xr.open_dataset(nc_in)
+
+    if isinstance(nc_out, str):
+        nc_out = Path(nc_out)
+
+    vars: list[str] = []
+    if raw_variables is not None:
+        vars.extend(raw_variables)
+    if derived_variables is not None:
+        for var_name in derived_variables:
+            vars.extend(get_required_variables(var_name))
+    vars = list(set(vars))
+    if len(vars) == 0:
+        vars.extend(RAW_VARS)
+
+    ds_out = ds[vars]
+    time_bnd = (0, 24)
+    level_bnd = (0, 10)
+    if "Time" in ds_out.dims:
+        ds_out = ds_out.sel(Time=slice(*time_bnd))
+    if "bottom_top" in ds_out.dims:
+        ds_out = ds_out.sel(bottom_top=slice(*level_bnd))
+    if "bottom_top_stag" in ds_out.dims:
+        ds_out = ds_out.sel(bottom_top_stag=slice(level_bnd[0], level_bnd[1]))
+    if overwrite:
+        nc_out.unlink(missing_ok=True)
+    ds_out.to_netcdf(nc_out)
 
 
 def get_hour_ds(
