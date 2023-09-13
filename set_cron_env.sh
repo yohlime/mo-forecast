@@ -52,7 +52,6 @@ export EWB_TRMM_CLIM=${MAINDIR}/ewb/trmm/clim
 export CDO=/opt/tools/nc/cdo
 
 export CONDA_PREFIX=${MAINDIR}/venv
-export MPLBACKEND="agg"
 export PYTHONPATH=${SCRIPT_DIR}/python:${PYTHONPATH}
 export PYTHON=${CONDA_PREFIX}/bin/python
 
