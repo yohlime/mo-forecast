@@ -10,7 +10,7 @@ from config import Config
 from helpers.wrf import wrf_getvar
 
 
-RAW_VARS = [
+RAW_VARS = (
     "RAINC",
     "RAINNC",
     "T2",
@@ -27,63 +27,65 @@ RAW_VARS = [
     "SWDDNI",
     "COSZEN",
     "SWDDIF",
-]
+)
+
+DERIVED_VARS = {
+    "rain": ("RAINC", "RAINNC"),
+    "temp": ("T2",),
+    "tsk": ("TSK",),
+    "hi": ("rh",),
+    "hix": ("rh",),
+    "rh": ("T2", "PSFC", "Q2"),
+    "height_agl": ("P", "PH", "PHB", "HGT"),
+    "pressure": ("P", "PB"),
+    "u_850hPa": ("U", "pressure"),
+    "v_850hPa": ("V", "pressure"),
+    "u_80m": ("U", "height_agl"),
+    "v_80m": ("V", "height_agl"),
+    "wpd": ("u_80m", "v_80m"),
+    "ppv": ("T2", "SWDDNI", "COSZEN", "SWDDIF"),
+    "ghi": ("SWDDNI", "COSZEN", "SWDDIF"),
+}
 
 VARS = {
-    "rain": {"varname": "prcp", "vars": ["RAINC", "RAINNC"]},
-    "temp": {"varname": "T2", "vars": ["T2"]},
-    "tsk": {"varname": "TSK", "vars": ["TSK"]},
-    "hi": {"varname": "hi", "vars": ["rh"]},
-    "hix": {"varname": "hi", "vars": ["rh"]},
-    "rh": {"varname": "rh2", "vars": ["T2", "PSFC", "Q2"]},
-    "height_agl": {"varname": "height_agl", "vars": ["P", "PH", "PHB", "HGT"]},
-    "pressure": {"varname": "pressure", "vars": ["P", "PB"]},
+    "rain": {"varname": "prcp"},
+    "temp": {"varname": "T2"},
+    "tsk": {"varname": "TSK"},
+    "hi": {"varname": "hi"},
+    "hix": {"varname": "hi"},
+    "rh": {"varname": "rh2"},
     "u_850hPa": {
         "varname": "ua",
         "levels": 850,
         "interp": "pressure",
-        "vars": ["U", "pressure"],
     },
     "v_850hPa": {
         "varname": "va",
         "levels": 850,
         "interp": "pressure",
-        "vars": ["V", "pressure"],
     },
-    "u_80m": {
-        "varname": "ua",
-        "levels": 80,
-        "interp": "height_agl",
-        "vars": ["U", "height_agl"],
-    },
-    "v_80m": {
-        "varname": "va",
-        "levels": 80,
-        "interp": "height_agl",
-        "vars": ["V", "height_agl"],
-    },
-    "wpd": {"varname": "wpd", "vars": ["u_80m", "v_80m"]},
-    "ppv": {"varname": "ppv", "vars": ["T2", "SWDDNI", "COSZEN", "SWDDIF"]},
-    "ghi": {"varname": "ghi", "vars": ["SWDDNI", "COSZEN", "SWDDIF"]},
+    "wpd": {"varname": "wpd"},
+    "ppv": {"varname": "ppv"},
+    "ghi": {"varname": "ghi"},
 }
 
 
-def get_required_variables(var_name: str) -> list[str]:
+def get_required_variables(var_name: str) -> tuple[str]:
     """Get required variables.
 
     Args:
         var_name (str): A valid raw or derived variable name.
 
     Returns:
-        list[str]: List required variables.
+        tuple[str]: List required variables.
     """
     v = []
-    if var_name in VARS:
-        for _v in VARS[var_name]["vars"]:
+    if var_name in DERIVED_VARS:
+        for _v in DERIVED_VARS[var_name]:
             v.extend(get_required_variables(_v))
     else:
         v.append(var_name)
-    return list(set(v))
+    return tuple(set(v))
 
 
 def create_wrfout_subset(
@@ -99,7 +101,8 @@ def create_wrfout_subset(
         nc_in (Path or str): Input wrfout.
         nc_out (Path or str): Output wrfout subset.
         raw_variables (list[str], optional): Raw variables to include. Defaults to None.
-        derived_variables (list[str], optional): Derived variable to include. Defaults to None.
+        derived_variables (list[str], optional): Derived variable to include.
+            Defaults to None.
         overwrite (bool, optional): Overwrite the file if it exists. Defaults to False.
     """
     ds = xr.open_dataset(nc_in)
@@ -183,11 +186,7 @@ def create_hour_ds(
     nt = conf.wrf_forecast_days * 24 + 1
     hr_ds = []
 
-    _vars = {
-        k: v
-        for k, v in VARS.items()
-        if k not in ["height_agl", "pressure", "u_80m", "v_80m"]
-    }
+    _vars = VARS.copy()
     if include_vars and isinstance(include_vars, list):
         _vars = {k: v for k, v in VARS.items() if k in include_vars}
     elif exclude_vars and isinstance(exclude_vars, list):
@@ -196,9 +195,8 @@ def create_hour_ds(
     # process needed variables
     for var_name, var_info in tqdm(_vars.items(), total=len(_vars)):
         print(f"Processing {var_name}...")
-        _var_info = {k: v for k, v in var_info.items() if k not in ["vars"]}
         if var_name == "rain":
-            _da = wrf_getvar(wrfin, timeidx=None, **_var_info)
+            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
             # create step-wise values
             __da = []
             for i in range(nt):
@@ -210,11 +208,11 @@ def create_hour_ds(
                     __da.append(_da.isel(time=i))
             _da = __da.copy()
         elif var_name in ["u_850hPa", "v_850hPa"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **_var_info) for t in range(nt)]
+            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
         elif var_name in ["wpd"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **_var_info) for t in range(nt)]
+            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
         else:
-            _da = wrf_getvar(wrfin, timeidx=None, **_var_info)
+            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
 
         if var_name in ["temp", "tsk"]:
             _da = _da - 273.15  # K to degC
