@@ -145,7 +145,7 @@ def get_hour_ds(
     """
     if src_dir is None:
         conf = Config()
-        src_dir = conf.data_dir
+        src_dir = conf.data_dir / "nc"
     elif not isinstance(src_dir, Path):
         src_dir = Path(src_dir)
 
