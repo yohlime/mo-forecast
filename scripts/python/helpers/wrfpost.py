@@ -183,7 +183,11 @@ def create_hour_ds(
     nt = conf.wrf_forecast_days * 24 + 1
     hr_ds = []
 
-    _vars = VARS.copy()
+    _vars = {
+        k: v
+        for k, v in VARS.items()
+        if k not in ["height_agl", "pressure", "u_80m", "v_80m"]
+    }
     if include_vars and isinstance(include_vars, list):
         _vars = {k: v for k, v in VARS.items() if k in include_vars}
     elif exclude_vars and isinstance(exclude_vars, list):
@@ -192,8 +196,9 @@ def create_hour_ds(
     # process needed variables
     for var_name, var_info in tqdm(_vars.items(), total=len(_vars)):
         print(f"Processing {var_name}...")
+        _var_info = {k: v for k, v in var_info.items() if k not in ["vars"]}
         if var_name == "rain":
-            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
+            _da = wrf_getvar(wrfin, timeidx=None, **_var_info)
             # create step-wise values
             __da = []
             for i in range(nt):
@@ -205,11 +210,11 @@ def create_hour_ds(
                     __da.append(_da.isel(time=i))
             _da = __da.copy()
         elif var_name in ["u_850hPa", "v_850hPa"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
+            _da = [wrf_getvar(wrfin, timeidx=t, **_var_info) for t in range(nt)]
         elif var_name in ["wpd"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
+            _da = [wrf_getvar(wrfin, timeidx=t, **_var_info) for t in range(nt)]
         else:
-            _da = wrf_getvar(wrfin, timeidx=None, **var_info)
+            _da = wrf_getvar(wrfin, timeidx=None, **_var_info)
 
         if var_name in ["temp", "tsk"]:
             _da = _da - 273.15  # K to degC
