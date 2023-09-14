@@ -1,4 +1,5 @@
 from typing import Optional, Union
+import warnings
 from pathlib import Path
 from tqdm import tqdm
 from datetime import timedelta
@@ -83,8 +84,10 @@ def get_required_variables(var_name: str) -> tuple[str]:
     if var_name in DERIVED_VARS:
         for _v in DERIVED_VARS[var_name]:
             v.extend(get_required_variables(_v))
-    else:
+    elif var_name in RAW_VARS:
         v.append(var_name)
+    else:
+        warnings.warn("Not a valid variable name, skipping.")
     return tuple(set(v))
 
 

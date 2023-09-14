@@ -13,18 +13,22 @@ from helpers.wrfpost import (
 
 
 @pytest.mark.parametrize(
-    "var_name, var_list",
+    "var_name, var_list, has_warning",
     [
-        ("rain", ["RAINC", "RAINNC"]),
-        ("hi", ["T2", "PSFC", "Q2"]),
-        ("v_80m", ["V", "P", "PH", "PHB", "HGT"]),
-        ("u_850hPa", ["U", "P", "PB"]),
-        ("random", ["random"]),
+        ("RAINC", ("RAINC",), False),
+        ("rain", ("RAINC", "RAINNC"), False),
+        ("hi", ("T2", "PSFC", "Q2"), False),
+        ("v_80m", ("V", "P", "PH", "PHB", "HGT"), False),
+        ("u_850hPa", ("U", "P", "PB"), False),
+        ("random", [], True),
     ],
 )
-def test_get_required_variables(var_name, var_list):
-    diff = set(get_required_variables(var_name)) ^ set(var_list)
-    assert not diff
+def test_get_required_variables(var_name, var_list, has_warning):
+    if has_warning:
+        with pytest.warns(UserWarning):
+            assert len(get_required_variables(var_name)) == 0
+    else:
+        assert not set(get_required_variables(var_name)) ^ set(var_list)
 
 
 @pytest.mark.parametrize(
