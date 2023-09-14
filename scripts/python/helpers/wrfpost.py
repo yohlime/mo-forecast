@@ -113,18 +113,18 @@ def create_wrfout_subset(
     if isinstance(nc_out, str):
         nc_out = Path(nc_out)
 
-    vars: list[str] = []
+    vars: list[str] = ["Times"]
     if raw_variables is not None:
         vars.extend(raw_variables)
     if derived_variables is not None:
         for var_name in derived_variables:
             vars.extend(get_required_variables(var_name))
     vars = list(set(vars))
-    if len(vars) == 0:
+    if len(vars) == 1:
         vars.extend(RAW_VARS)
 
     ds_out = ds[vars]
-    time_bnd = (0, 24)
+    time_bnd = (0, 24 + 1)
     level_bnd = (0, 10)
     if "Time" in ds_out.dims:
         ds_out = ds_out.sel(Time=slice(*time_bnd))
