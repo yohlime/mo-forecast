@@ -131,7 +131,7 @@ def create_wrfout_subset(
     if "bottom_top" in ds_out.dims:
         ds_out = ds_out.sel(bottom_top=slice(*level_bnd))
     if "bottom_top_stag" in ds_out.dims:
-        ds_out = ds_out.sel(bottom_top_stag=slice(level_bnd[0], level_bnd[1]))
+        ds_out = ds_out.sel(bottom_top_stag=slice(level_bnd[0], level_bnd[1] + 1))
     if overwrite:
         nc_out.unlink(missing_ok=True)
     ds_out.to_netcdf(nc_out)
