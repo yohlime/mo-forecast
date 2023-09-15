@@ -5,58 +5,13 @@ from pathlib import Path
 
 from config import Config
 
+from netCDF4 import Dataset
+import xarray as xr
+
 from helpers.wrfpost import (
-    get_required_variables,
-    create_wrfout_subset,
     get_hour_ds,
+    create_hour_ds,
 )
-
-
-@pytest.mark.parametrize(
-    "var_name, var_list, has_warning",
-    [
-        ("RAINC", ("RAINC",), False),
-        ("rain", ("RAINC", "RAINNC"), False),
-        ("hi", ("T2", "PSFC", "Q2"), False),
-        ("v_80m", ("V", "P", "PH", "PHB", "HGT"), False),
-        ("u_850hPa", ("U", "P", "PB"), False),
-        ("random", [], True),
-    ],
-)
-def test_get_required_variables(var_name, var_list, has_warning):
-    if has_warning:
-        with pytest.warns(UserWarning):
-            assert len(get_required_variables(var_name)) == 0
-    else:
-        assert not set(get_required_variables(var_name)) ^ set(var_list)
-
-
-@pytest.mark.parametrize(
-    "args",
-    [
-        ("wrfout_sample", "wrfout_subset_sample"),
-        ("wrfout_sample", "wrfout_subset_sample", ["var1", "var2"]),
-        ("wrfout_sample", "wrfout_subset_sample", None, ["var1", "var2"]),
-        ("wrfout_sample", "wrfout_subset_sample", None, None, True),
-    ],
-)
-def test_create_wrfout_subset(mocker: MockerFixture, args):
-    m_open_dataset = mocker.patch("xarray.open_dataset")
-    m_path_unlink = mocker.patch.object(Path, "unlink", return_value=True)
-    m_get_required_variables = mocker.patch("helpers.wrfpost.get_required_variables")
-
-    create_wrfout_subset(*args)
-    m_open_dataset.assert_called_once_with(args[0])
-    if (len(args) >= 3) and args[2] is not None:
-        c_args = m_open_dataset().__getitem__.call_args.args[0]
-        assert set(args[2]).issubset(set(c_args))
-    if (len(args) >= 4) and args[3] is not None:
-        m_get_required_variables.assert_called()
-    else:
-        m_get_required_variables.assert_not_called()
-    if (len(args) == 5) and args[4]:
-        m_path_unlink.assert_called_once()
-    m_open_dataset().__getitem__().to_netcdf.assert_called_once_with(Path(args[1]))
 
 
 @pytest.mark.parametrize(
@@ -80,3 +35,39 @@ def test_get_hour_ds(mocker: MockerFixture, date_str, src_dir, files, expected_o
     assert get_hour_ds(date_str, src_dir) == expected_output
     if len(files):
         m_open_dataset.assert_called_once_with(ret_val)
+
+
+@pytest.mark.parametrize(
+    "num_ens, args",
+    [
+        (1, {}),
+        (1, {"include_vars": ["u_850hPa", "v_850hPa"]}),
+        (1, {"exclude_vars": ["wpd", "ppv", "ghi"]}),
+        (2, {"include_vars": ["rain", "rh"]}),
+        (3, {"include_vars": ["wpd"]}),
+    ],
+)
+def test_create_hour_ds(monkeypatch, mocker, tmp_path, wrfout, num_ens, args):
+    monkeypatch.setenv("OUTDIR", str(tmp_path / "output"))
+    monkeypatch.setenv("WRF_REALDIR", str(tmp_path / "model/wrf"))
+    monkeypatch.setenv("WRF_RUN_NAMES", "run1")
+    monkeypatch.setenv("WRF_FCST_DAYS", "1")
+
+    wrfin = {}
+    for n in range(num_ens):
+        wrfin[f"ens{n}"] = Dataset(wrfout)
+    if wrfout is not None:
+        hr_ds = create_hour_ds(wrfin, **args)
+        assert isinstance(hr_ds, xr.Dataset)
+        for dim in ["time", "lat", "lon"]:
+            assert dim in hr_ds.dims
+        if num_ens == 1:
+            assert "ens" not in hr_ds.dims
+        elif num_ens > 1:
+            assert "ens" in hr_ds.dims
+        if "include_vars" in args:
+            for var_name in args["include_vars"]:
+                assert var_name in hr_ds.variables
+        if "exclude_vars" in args:
+            for var_name in args["exclude_vars"]:
+                assert var_name not in hr_ds.variables

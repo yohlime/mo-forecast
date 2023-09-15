@@ -166,6 +166,9 @@ Thumbs.db
 .vscode/
 .env
 
+/tests/python/data/*
+!/tests/python/data/README.md
+
 .tmp/
 input
 output

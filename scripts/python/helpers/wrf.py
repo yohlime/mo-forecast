@@ -1,22 +1,178 @@
-from typing import Optional
+import warnings
+from pathlib import Path
+from typing import Optional, Union
 import numpy.typing as npt
 import netCDF4
 import xarray as xr
 
 import numpy as np
-from wrf import getvar, interplevel
+from wrf import getvar, interplevel, ALL_TIMES
 import metpy.calc as mpcalc
 from metpy.units import units
 
 
+RAW_VARS = (
+    "RAINC",
+    "RAINNC",
+    "T2",
+    "TSK",
+    "PSFC",
+    "Q2",
+    "HGT",
+    "P",
+    "PH",
+    "PB",
+    "PHB",
+    "U",
+    "V",
+    "SWDDNI",
+    "COSZEN",
+    "SWDDIF",
+)
+
+DERIVED_VARS = {
+    "prcp": ("RAINC", "RAINNC"),
+    "tsk": ("TSK",),
+    "hi": ("rh2",),
+    "hix": ("rh2",),
+    "rh2": ("T2", "PSFC", "Q2"),
+    "ua": ("U"),
+    "va": ("V"),
+    "height_agl": ("P", "PH", "PHB", "HGT"),
+    "pressure": ("P", "PB"),
+    "u_850hPa": ("ua", "pressure"),
+    "v_850hPa": ("va", "pressure"),
+    "u_80m": ("ua", "height_agl"),
+    "v_80m": ("va", "height_agl"),
+    "wpd": ("u_80m", "v_80m"),
+    "ppv": ("T2", "SWDDNI", "COSZEN", "SWDDIF"),
+    "ghi": ("SWDDNI", "COSZEN", "SWDDIF"),
+}
+
+
+def get_required_variables(var_name: str) -> tuple[str]:
+    """Get required variables.
+
+    Args:
+        var_name (str): A valid raw or derived variable name.
+
+    Returns:
+        tuple[str]: List required variables.
+    """
+    v = []
+    if var_name in DERIVED_VARS:
+        for _v in DERIVED_VARS[var_name]:
+            v.extend(get_required_variables(_v))
+    elif var_name in RAW_VARS:
+        v.append(var_name)
+    else:
+        warnings.warn("Not a valid variable name, skipping.")
+    return tuple(set(v))
+
+
+def create_wrfout_subset(
+    nc_in: Union[Path, str],
+    nc_out: Union[Path, str],
+    raw_variables: Optional[list[str]] = None,
+    derived_variables: Optional[list[str]] = None,
+    overwrite=False,
+):
+    """Create a subset of wrfout
+
+    Args:
+        nc_in (Path or str): Input wrfout.
+        nc_out (Path or str): Output wrfout subset.
+        raw_variables (list[str], optional): Raw variables to include. Defaults to None.
+        derived_variables (list[str], optional): Derived variable to include.
+            Defaults to None.
+        overwrite (bool, optional): Overwrite the file if it exists. Defaults to False.
+    """
+    ds = xr.open_dataset(nc_in)
+
+    if isinstance(nc_out, str):
+        nc_out = Path(nc_out)
+
+    vars: list[str] = ["Times"]
+    if raw_variables is not None:
+        vars.extend(raw_variables)
+    if derived_variables is not None:
+        for var_name in derived_variables:
+            vars.extend(get_required_variables(var_name))
+    vars = list(set(vars))
+    if len(vars) == 1:
+        vars.extend(RAW_VARS)
+
+    ds_out = ds[vars]
+    time_bnd = (0, 24 + 1)
+    level_bnd = (0, 10)
+    if "Time" in ds_out.dims:
+        ds_out = ds_out.sel(Time=slice(*time_bnd))
+    if "bottom_top" in ds_out.dims:
+        ds_out = ds_out.sel(bottom_top=slice(*level_bnd))
+    if "bottom_top_stag" in ds_out.dims:
+        ds_out = ds_out.sel(bottom_top_stag=slice(level_bnd[0], level_bnd[1] + 1))
+    if overwrite:
+        nc_out.unlink(missing_ok=True)
+    ds_out.to_netcdf(nc_out)
+
+
 def wrf_getvar(
+    wrfin,
+    varname: str,
+    timeidx: Optional[int] = ALL_TIMES,
+    levels: Optional[npt.NDArray[np.float32]] = None,
+    interp: Optional[str] = None,
+) -> xr.DataArray:
+    """Wrapper around wrf-python's getvar
+
+    Args:
+        wrfin (netCDF4.Dataset or an Iterable]): WRF-ARW NetCDF data.
+        varname (str): The variable name.
+        timeidx (int, optional): The desired time index. Defaults to ALL_TIMES.
+        levels (numpy.NDArray[float], optional): Desired levels. Defaults to None.
+        interp (str, optional): Type of vertical interpolation. Defaults to None.
+
+    Returns:
+        xarray.DataArray: The extracted variable.
+    """
+    required_variables = get_required_variables(varname)
+    res_shape = None
+    ens_names = ["ens0"]
+    wrfins = []
+    if isinstance(wrfin, dict):
+        ens_names = list(wrfin.keys())
+        wrfins = [v for v in wrfin.values()]
+    if isinstance(wrfin, list) or isinstance(wrfin, tuple):
+        ens_names = [f"end{i}" for i in range(len(wrfin))]
+        wrfins = [v for v in wrfin]
+    elif isinstance(wrfin, netCDF4.Dataset):
+        wrfins = [wrfin]
+
+    res_shape = wrfins[0].variables[required_variables[0]].shape
+
+    dat: list[xr.DataArray] = []
+    for _wrfin in wrfins:
+        if timeidx is ALL_TIMES:
+            _dat = []
+            for t in range(res_shape[0]):
+                _dat.append(_wrf_getvar(_wrfin, varname, t, levels, interp))
+            dat.append(xr.concat(_dat, dim="time"))
+        else:
+            dat.append(_wrf_getvar(_wrfin, varname, timeidx, levels, interp))
+
+    if len(dat) > 1:
+        return xr.concat(dat, xr.DataArray(ens_names, coords=[ens_names], dims=["ens"]))
+    return dat[0]
+
+
+def _wrf_getvar(
     wrfin: netCDF4.Dataset,
     varname: str,
     timeidx=0,
     levels: Optional[npt.NDArray[np.float32]] = None,
     interp: Optional[str] = None,
 ) -> xr.DataArray:
-    """Wrapper around wrf-python's getvar
+    """Internal wrapper around wrf-python's getvar
 
     Args:
         wrfin (netCDF4.Dataset): WRF-ARW NetCDF data.
@@ -69,7 +225,6 @@ def wrf_getvar(
         "XLAT": "lat",
         "XLONG": "lon",
         "XTIME": "xtime",
-        "key_0": "ens",
     }
     tr = {k: tr[k] for k in tr.keys() if k in da.coords}
     da = da.rename(tr)

@@ -1,5 +1,4 @@
 from typing import Optional, Union
-import warnings
 from pathlib import Path
 from tqdm import tqdm
 from datetime import timedelta
@@ -10,43 +9,6 @@ from config import Config
 
 from helpers.wrf import wrf_getvar
 
-
-RAW_VARS = (
-    "RAINC",
-    "RAINNC",
-    "T2",
-    "TSK",
-    "PSFC",
-    "Q2",
-    "HGT",
-    "P",
-    "PH",
-    "PB",
-    "PHB",
-    "U",
-    "V",
-    "SWDDNI",
-    "COSZEN",
-    "SWDDIF",
-)
-
-DERIVED_VARS = {
-    "rain": ("RAINC", "RAINNC"),
-    "temp": ("T2",),
-    "tsk": ("TSK",),
-    "hi": ("rh",),
-    "hix": ("rh",),
-    "rh": ("T2", "PSFC", "Q2"),
-    "height_agl": ("P", "PH", "PHB", "HGT"),
-    "pressure": ("P", "PB"),
-    "u_850hPa": ("U", "pressure"),
-    "v_850hPa": ("V", "pressure"),
-    "u_80m": ("U", "height_agl"),
-    "v_80m": ("V", "height_agl"),
-    "wpd": ("u_80m", "v_80m"),
-    "ppv": ("T2", "SWDDNI", "COSZEN", "SWDDIF"),
-    "ghi": ("SWDDNI", "COSZEN", "SWDDIF"),
-}
 
 VARS = {
     "rain": {"varname": "prcp"},
@@ -69,72 +31,6 @@ VARS = {
     "ppv": {"varname": "ppv"},
     "ghi": {"varname": "ghi"},
 }
-
-
-def get_required_variables(var_name: str) -> tuple[str]:
-    """Get required variables.
-
-    Args:
-        var_name (str): A valid raw or derived variable name.
-
-    Returns:
-        tuple[str]: List required variables.
-    """
-    v = []
-    if var_name in DERIVED_VARS:
-        for _v in DERIVED_VARS[var_name]:
-            v.extend(get_required_variables(_v))
-    elif var_name in RAW_VARS:
-        v.append(var_name)
-    else:
-        warnings.warn("Not a valid variable name, skipping.")
-    return tuple(set(v))
-
-
-def create_wrfout_subset(
-    nc_in: Union[Path, str],
-    nc_out: Union[Path, str],
-    raw_variables: Optional[list[str]] = None,
-    derived_variables: Optional[list[str]] = None,
-    overwrite=False,
-):
-    """Create a subset of wrfout
-
-    Args:
-        nc_in (Path or str): Input wrfout.
-        nc_out (Path or str): Output wrfout subset.
-        raw_variables (list[str], optional): Raw variables to include. Defaults to None.
-        derived_variables (list[str], optional): Derived variable to include.
-            Defaults to None.
-        overwrite (bool, optional): Overwrite the file if it exists. Defaults to False.
-    """
-    ds = xr.open_dataset(nc_in)
-
-    if isinstance(nc_out, str):
-        nc_out = Path(nc_out)
-
-    vars: list[str] = ["Times"]
-    if raw_variables is not None:
-        vars.extend(raw_variables)
-    if derived_variables is not None:
-        for var_name in derived_variables:
-            vars.extend(get_required_variables(var_name))
-    vars = list(set(vars))
-    if len(vars) == 1:
-        vars.extend(RAW_VARS)
-
-    ds_out = ds[vars]
-    time_bnd = (0, 24 + 1)
-    level_bnd = (0, 10)
-    if "Time" in ds_out.dims:
-        ds_out = ds_out.sel(Time=slice(*time_bnd))
-    if "bottom_top" in ds_out.dims:
-        ds_out = ds_out.sel(bottom_top=slice(*level_bnd))
-    if "bottom_top_stag" in ds_out.dims:
-        ds_out = ds_out.sel(bottom_top_stag=slice(level_bnd[0], level_bnd[1] + 1))
-    if overwrite:
-        nc_out.unlink(missing_ok=True)
-    ds_out.to_netcdf(nc_out)
 
 
 def get_hour_ds(
@@ -220,11 +116,10 @@ def create_hour_ds(
 
         if var_name in ["rain", "u_850hPa", "v_850hPa", "wpd"]:
             _da = xr.concat(_da, "time")
-            if "ens" in _da.dims:
-                _da = _da.transpose("ens", "time", ...)
+            _da = _da.transpose("ens", "time", ..., missing_dims="warn")
 
         if var_name in ["u_850hPa", "v_850hPa", "wpd"]:
-            _da = _da.drop("level")
+            _da = _da.reset_coords("level", drop=True)
 
         _da.name = var_name
         hr_ds.append(xr.DataArray(_da, attrs={}))
@@ -235,9 +130,8 @@ def create_hour_ds(
     hr_ds = hr_ds.assign_coords(
         west_east=hr_ds.lon[0, :].values,
         south_north=hr_ds.lat[:, 0].values,
-        key_0=range(len(wrfin.keys())),
     )
-    hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
+    hr_ds = hr_ds.reset_coords(["lon", "lat", "xtime"], drop=True)
     hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat"})
     return hr_ds
 
