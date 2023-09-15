@@ -64,7 +64,13 @@ def wrf_getvar(
             vert = getvar(wrfin, interp, timeidx)
         da = interplevel(da, vert, levels)
 
-    tr = {"Time": "time", "XLAT": "lat", "XLONG": "lon", "XTIME": "xtime"}
+    tr = {
+        "Time": "time",
+        "XLAT": "lat",
+        "XLONG": "lon",
+        "XTIME": "xtime",
+        "key_0": "ens",
+    }
     tr = {k: tr[k] for k in tr.keys() if k in da.coords}
     da = da.rename(tr)
     return da

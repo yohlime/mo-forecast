@@ -210,9 +210,7 @@ def create_hour_ds(
                 else:
                     __da.append(_da.isel(time=i))
             _da = __da.copy()
-        elif var_name in ["u_850hPa", "v_850hPa"]:
-            _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
-        elif var_name in ["wpd"]:
+        elif var_name in ["u_850hPa", "v_850hPa", "wpd"]:
             _da = [wrf_getvar(wrfin, timeidx=t, **var_info) for t in range(nt)]
         else:
             _da = wrf_getvar(wrfin, timeidx=None, **var_info)
@@ -222,7 +220,8 @@ def create_hour_ds(
 
         if var_name in ["rain", "u_850hPa", "v_850hPa", "wpd"]:
             _da = xr.concat(_da, "time")
-            _da = _da.transpose("key_0", "time", ...)
+            if "ens" in _da.dims:
+                _da = _da.transpose("ens", "time", ...)
 
         if var_name in ["u_850hPa", "v_850hPa", "wpd"]:
             _da = _da.drop("level")
@@ -239,7 +238,7 @@ def create_hour_ds(
         key_0=range(len(wrfin.keys())),
     )
     hr_ds = hr_ds.drop(["lon", "lat", "xtime"])
-    hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat", "key_0": "ens"})
+    hr_ds = hr_ds.rename({"west_east": "lon", "south_north": "lat"})
     return hr_ds
 
 
