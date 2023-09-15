@@ -34,7 +34,7 @@ class Config:
 
         script_dir = os.getenv("SCRIPT_DIR")
         if script_dir is None:
-            self.script_dir = wrf_maindir / "scripts"
+            self.script_dir = self.wrf_maindir / "scripts"
             warnings.warn(f"SCRIPT_DIR not set, script_dir set to '{script_dir}'")
         else:
             self.script_dir = Path(script_dir)
