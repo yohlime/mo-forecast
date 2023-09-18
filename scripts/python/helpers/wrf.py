@@ -193,8 +193,8 @@ def _wrf_getvar(
         da = heat_index(t, rh)
         da.name = "hi"
     elif varname == "wpd":
-        u = wrf_getvar(wrfin, "ua", timeidx, levels=80, interp="height_agl")
-        v = wrf_getvar(wrfin, "va", timeidx, levels=80, interp="height_agl")
+        u = _wrf_getvar(wrfin, "ua", timeidx, levels=80, interp="height_agl")
+        v = _wrf_getvar(wrfin, "va", timeidx, levels=80, interp="height_agl")
         wspd = u.copy()
         wspd.values = (u.values**2 + v.values**2) ** 0.5
         da = wind_power_density(wspd)
