@@ -201,7 +201,7 @@ def create_interval_ds(hr_ds: xr.Dataset, hr_interval) -> xr.Dataset:
     return xr.merge(interval_ds)
 
 
-def save_to_netcdf(ds: xr.Dataset, out_file: Path):
+def save_as_netcdf(ds: xr.Dataset, out_file: Path):
     """Save as netCDF file
 
     Args:

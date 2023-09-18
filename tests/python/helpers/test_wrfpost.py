@@ -8,10 +8,7 @@ from config import Config
 from netCDF4 import Dataset
 import xarray as xr
 
-from helpers.wrfpost import (
-    get_hour_ds,
-    create_hour_ds,
-)
+from helpers.wrfpost import get_hour_ds, create_hour_ds, save_as_netcdf
 
 
 @pytest.mark.parametrize(
@@ -71,3 +68,13 @@ def test_create_hour_ds(monkeypatch, mocker, tmp_path, wrfout, num_ens, args):
         if "exclude_vars" in args:
             for var_name in args["exclude_vars"]:
                 assert var_name not in hr_ds.variables
+
+
+def test_save_as_netcdf(mocker):
+    m_dataset = mocker.patch("xarray.Dataset")
+    ds = m_dataset()
+    out_file = Path("tmp")
+    save_as_netcdf(ds, out_file)
+    assert ds.lon.attrs.__setitem__.call_count > 1
+    assert ds.lat.attrs.__setitem__.call_count > 1
+    ds.to_netcdf.assert_called_once_with(out_file, unlimited_dims=["time"])

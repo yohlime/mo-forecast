@@ -9,7 +9,7 @@ from wrf import omp_set_num_threads, omp_get_max_threads
 
 from config import Config
 
-from helpers.wrfpost import create_hour_ds, create_interval_ds, save_to_netcdf
+from helpers.wrfpost import create_hour_ds, create_interval_ds, save_as_netcdf
 from plot_maps import plot_maps
 from plot_ts import plot_timeseries
 from plot_ecw_web_maps import plot_web_maps
@@ -32,11 +32,11 @@ def main(wrfin, out_dir):
     out_file = out_dir / f"nc/wrf_{init_dt:%Y-%m-%d_%H}.nc"
     out_file.parent.mkdir(parents=True, exist_ok=True)
     print(f"Saving data to {out_file}")
-    save_to_netcdf(hr_ds, out_file)
+    save_as_netcdf(hr_ds, out_file)
     day_ds = create_interval_ds(hr_ds, 24)  # create daily dataset
     day_ds_rain = day_ds.rain  # select daily dataset rain only
     out_file_rain = out_dir / f"nc/wrf_{init_dt:%Y-%m-%d_%H}_rain.nc"
-    save_to_netcdf(day_ds_rain, out_file_rain)
+    save_as_netcdf(day_ds_rain, out_file_rain)
     three_hrly_ds = create_interval_ds(hr_ds, 3)  # create three hourly dataset
 
     # region output
