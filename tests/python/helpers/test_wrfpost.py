@@ -34,6 +34,7 @@ def test_get_hour_ds(mocker: MockerFixture, date_str, src_dir, files, expected_o
         m_open_dataset.assert_called_once_with(ret_val)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "num_ens, args",
     [
@@ -44,7 +45,7 @@ def test_get_hour_ds(mocker: MockerFixture, date_str, src_dir, files, expected_o
         (3, {"include_vars": ["wpd"]}),
     ],
 )
-def test_create_hour_ds(monkeypatch, mocker, tmp_path, wrfout, num_ens, args):
+def test_create_hour_ds(monkeypatch, tmp_path, wrfout, num_ens, args):
     monkeypatch.setenv("OUTDIR", str(tmp_path / "output"))
     monkeypatch.setenv("WRF_REALDIR", str(tmp_path / "model/wrf"))
     monkeypatch.setenv("WRF_RUN_NAMES", "run1")

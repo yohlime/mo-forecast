@@ -55,6 +55,7 @@ def test_create_wrfout_subset(mocker: MockerFixture, args):
     m_open_dataset().__getitem__().to_netcdf.assert_called_once_with(Path(args[1]))
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "num_ens, args",
     [
@@ -84,7 +85,7 @@ def test_create_wrfout_subset(mocker: MockerFixture, args):
         (2, {"varname": "ghi"}),
     ],
 )
-def test_wrf_getvar(mocker, wrfout, num_ens, args):
+def test_wrf_getvar(wrfout, num_ens, args):
     wrfin = {}
     for n in range(num_ens):
         wrfin[f"ens{n}"] = nc4.Dataset(wrfout)
