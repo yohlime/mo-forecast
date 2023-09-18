@@ -8,7 +8,12 @@ from config import Config
 from netCDF4 import Dataset
 import xarray as xr
 
-from helpers.wrfpost import get_hour_ds, create_hour_ds, save_as_netcdf
+from helpers.wrfpost import (
+    get_hour_ds,
+    create_hour_ds,
+    create_interval_ds,
+    save_as_netcdf,
+)
 
 
 @pytest.mark.parametrize(
@@ -45,7 +50,7 @@ def test_get_hour_ds(mocker: MockerFixture, date_str, src_dir, files, expected_o
         (3, {"include_vars": ["wpd"]}),
     ],
 )
-def test_create_hour_ds(monkeypatch, tmp_path, wrfout, num_ens, args):
+def test_create_hour_ds(monkeypatch, tmp_path, wrfout: Path, num_ens: int, args):
     monkeypatch.setenv("OUTDIR", str(tmp_path / "output"))
     monkeypatch.setenv("WRF_REALDIR", str(tmp_path / "model/wrf"))
     monkeypatch.setenv("WRF_RUN_NAMES", "run1")
@@ -71,7 +76,25 @@ def test_create_hour_ds(monkeypatch, tmp_path, wrfout, num_ens, args):
                 assert var_name not in hr_ds.variables
 
 
-def test_save_as_netcdf(mocker):
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    "hr_interval",
+    [24, 3],
+)
+def test_create_interval_ds(monkeypatch, tmp_path, wrfnc: Path, hr_interval: int):
+    monkeypatch.setenv("OUTDIR", str(tmp_path / "output"))
+    monkeypatch.setenv("WRF_REALDIR", str(tmp_path / "model/wrf"))
+    monkeypatch.setenv("SCRIPT_DIR", str(tmp_path / "scripts"))
+    monkeypatch.setenv("WRF_FCST_DAYS", "1")
+
+    hr_ds = xr.open_dataset(wrfnc)
+    ds = create_interval_ds(hr_ds, hr_interval)
+    assert isinstance(ds, xr.Dataset)
+    assert not (set(hr_ds.keys()) ^ set(ds.keys()))
+    assert hr_ds.time.shape[0] > ds.time.shape[0]
+
+
+def test_save_as_netcdf(mocker: MockerFixture):
     m_dataset = mocker.patch("xarray.Dataset")
     ds = m_dataset()
     out_file = Path("tmp")

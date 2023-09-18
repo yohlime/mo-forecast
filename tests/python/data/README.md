@@ -1,7 +1,7 @@
 # Test data
 
 ## wrfout_d01_subset
-Subset of a wrfout file. Contains variables required so `helpers.wrfpost.create_hour_ds()` will not throw an Error. Produced using `helpers.wrf.create_wrfout_subset()`.netcdf wrfout_d01_2023-09-01_subset
+Subset of a wrfout file. Contains variables required so `helpers.wrfpost.create_hour_ds()` will not throw an Error. Produced using `helpers.wrf.create_wrfout_subset()`.
 
 ```
 dimensions:
@@ -38,4 +38,29 @@ variables:
 	float XLONG_U(Time, south_north, west_east_stag) ;
 	float XLAT_V(Time, south_north_stag, west_east) ;
 	float XLONG_V(Time, south_north_stag, west_east) ;
+```
+
+## wrf.nc
+Sample output using `helpers.wrfpost.create_hour_ds()`
+
+```
+dimensions:
+	time = UNLIMITED ; // (25 currently)
+	lat = 415 ;
+	lon = 320 ;
+variables:
+	int64 time(time) ;
+	float rain(time, lat, lon) ;
+	float temp(time, lat, lon) ;
+	float tsk(time, lat, lon) ;
+	double hi(time, lat, lon) ;
+	double hix(time, lat, lon) ;
+	float rh(time, lat, lon) ;
+	float u_850hPa(time, lat, lon) ;
+	float v_850hPa(time, lat, lon) ;
+	double wpd(time, lat, lon) ;
+	double ppv(time, lat, lon) ;
+	float ghi(time, lat, lon) ;
+	float lon(lon) ;
+	float lat(lat) ;
 ```

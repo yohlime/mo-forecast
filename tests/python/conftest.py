@@ -13,3 +13,11 @@ def wrfout(data_dir: Path):
     if file.is_file():
         return file
     return None
+
+
+@pytest.fixture
+def wrfnc(data_dir: Path):
+    file = data_dir / "wrf.nc"
+    if file.is_file():
+        return file
+    return None
