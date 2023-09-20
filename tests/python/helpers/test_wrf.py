@@ -98,3 +98,4 @@ def test_wrf_getvar(wrfout, num_ens, args):
             assert "ens" not in wrf_var.dims
         elif num_ens > 1:
             assert "ens" in wrf_var.dims
+            assert wrf_var.coords["ens"].dtype == "int64"

@@ -137,13 +137,13 @@ def wrf_getvar(
     """
     required_variables = get_required_variables(varname)
     res_shape = None
-    ens_names = ["ens0"]
+    ens_names = [1]
     wrfins = []
     if isinstance(wrfin, dict):
-        ens_names = list(wrfin.keys())
+        ens_names = [i for i in range(len(wrfin.keys()))]
         wrfins = [v for v in wrfin.values()]
     if isinstance(wrfin, list) or isinstance(wrfin, tuple):
-        ens_names = [f"end{i}" for i in range(len(wrfin))]
+        ens_names = [i for i in range(len(wrfin))]
         wrfins = [v for v in wrfin]
     elif isinstance(wrfin, netCDF4.Dataset):
         wrfins = [wrfin]
