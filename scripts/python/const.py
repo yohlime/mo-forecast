@@ -40,7 +40,7 @@ plot_vars = {
     "hi": {
         "title": "Heat Index [°C]",
         "units": "°C",
-        "levels": [27, 32, 41, 54],
+        "levels": [27, 32, 41, 52],
         "colors": sns.blend_palette(
             ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
         ),
@@ -48,7 +48,7 @@ plot_vars = {
     "hix": {
         "title": "Maximum Heat Index [°C]",
         "units": "°C",
-        "levels": [27, 32, 41, 54],
+        "levels": [27, 32, 41, 52],
         "colors": sns.blend_palette(
             ["#ffffff", "#f0e68c", "#ff8c00", "#b22222", "#9932cc"], n_colors=5
         ),

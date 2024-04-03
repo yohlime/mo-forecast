@@ -54,9 +54,9 @@ def color(ds):
             _cols.append("#F0E786")
         elif 32.0 < i <= 41.0:
             _cols.append("#FF8C00")
-        elif 41.0 < i <= 54.0:
+        elif 41.0 < i <= 52.0:
             _cols.append("red")
-        elif i > 54.0:
+        elif i > 52.0:
             _cols.append("purple")
         elif i < 27.0:
             _cols.append("#EEEEEE")
