@@ -36,9 +36,10 @@ def ARIinterp(_newx):
     _ph_ari_file = conf.script_dir / "python/resources/nc/PHIL_ARI.nc"
     _dat = xr.open_dataset(f"{_ph_ari_file}").rename({"precip": "rain"})
 
-    _ari = [1, 2, 5, 10, 25, 30, 50, 100, 200, 500, 1000]
+    _ari = [1.5, 2, 5, 10, 25, 30, 50, 100, 200, 500, 1000]
+    _dat = _dat.assign_coords({"ari": _ari})
     _idx = xr.DataArray(_ari, dims=["ari"]).broadcast_like(_dat).to_dataset(name="rain")
-
+    
     _ari_interpd = xr.apply_ufunc(
         interpd,
         _newx,
@@ -77,7 +78,7 @@ plot_vars = {
     "rain": {
         "title": "Average Recurrence Interval (years)",
         "units": "years",
-        "levels": [1.0, 1.1, 2.1, 3.1, 4.1, 5.1, 10.1, 20.1, 30],
+        "levels": [1., 2., 3., 4., 5., 10., 15., 20., 30.],
         "colors": [
             "#ffffff",
             "#0064ff",
