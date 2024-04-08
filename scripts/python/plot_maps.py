@@ -12,6 +12,7 @@ from const import (
     domain_land_mask as land_mask,
 )
 from config import Config
+from helpers.ari import *
 from helpers.model_agreement import model_agreement
 
 lon_formatter = LongitudeFormatter(zero_direction_label=True, degree_symbol="")
@@ -60,6 +61,7 @@ def plot_maps(ds, out_dir):
                         )
             elif var_name == "rainx":
                 das = {"ens": ds["rain"].isel(time=t).mean("ens")}
+                das_regrid =  mask(regrid(ds["rain"].mean("ens"), open_ref()))
             elif var_name == "temp":
                 _da = (
                     ds["tsk"]
@@ -108,13 +110,10 @@ def plot_maps(ds, out_dir):
                 ax.set_extent((*xlim, *ylim))
 
                 if var_name == "rainx":
-                    # trmm2 = trmm.isel(time=da.time.dt.month.values - 1)
-                    # trmm2.name = da.name
-                    # trmm2 = trmm2.assign_coords(
-                    #     time=da.time,
-                    # )
-                    # extreme_da = np.divide(da, trmm2) * 100
-                    extreme_da = model_agreement(ds["rain"].isel(time=t))
+                    # extreme_da = model_agreement(ds["rain"].isel(time=t))
+                    das_ari = run_interp(das_regrid).isel(time=t)
+                    das_ari = regrid(das_ari, ds[["lat", "lon"]], method="conservative")
+                    da = da.where(das_ari["rain"] >= 5)
                 elif var_name == "temp":
                     p = _das[da_name].plot.contour(
                         ax=ax,
@@ -175,12 +174,12 @@ def plot_maps(ds, out_dir):
                         extend="both",
                         cbar_kwargs=dict(shrink=0.5),
                     )
-                if var_name == "rainx":  # from previous < 100 to < 2
-                    da.where(extreme_da < 2).plot.contourf(
+                if var_name == "rainx":  # from previous extreme < 2 to ari >=5
+                    da.plot.contourf(
                         ax=ax,
                         transform=conf.plot_proj,
                         levels=levels,
-                        colors="white",
+                        colors=colors, # previously white
                         alpha=1,
                         extend="both",
                         add_labels=False,
