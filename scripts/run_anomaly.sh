@@ -9,6 +9,7 @@ echo "---------------------------------"
 # -------------------------------------------- #
 
 # source "$SCRIPT_DIR/set_date_vars.sh"
+export MPLBACKEND="agg"
 
 cd "$SCRIPT_DIR/python" || exit
 
