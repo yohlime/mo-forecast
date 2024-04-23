@@ -6,17 +6,18 @@ import calendar
 import time
 from datetime import datetime
 
-import sys
-import getopt
-import glob
 import os
+import sys
+import glob
+import getopt
+from pathlib import Path
 
 from helpers.anomaly_format import *
 
 resources_dir = "/home/modelman/forecast/scripts/python/resources/nc"
 wrf_dir = "/home/modelman/forecast/output/anomaly/nc"
 inp_dir = "/mnt/Dataserver/Data3/MO_WCR/forecast"
-out_dir = "/home/modelman/forecast/output/anomaly"
+out_dir = Path("/home/modelman/forecast/output/anomaly")
 
 def set_dates(months):
     global _init_date, _file_date
@@ -32,10 +33,9 @@ def set_dates(months):
         
     return _file_date
 
-
 def open_obs(): ## open observed climatological datasets
     trmm = xr.open_dataset(f"{resources_dir}/trmm_1998-2015_clim.nc")
-    aphrodite =xr.open_dataset(f"{resources_dir}/APHRODITE_1986-2015_clim.nc")
+    aphrodite =xr.open_dataset(f"{resources_dir}/APHRODITE_1971-2000_clim.nc")
     
     trmm = trmm.transpose("time", "lat", "lon").groupby("time.month").mean("time")
     trmm = trmm.rename({"precipitation": "rain"})
@@ -61,7 +61,7 @@ def check_dates(date, ds): ## check completeness of dates
     _missing_dates = _ref_dates.difference(_act_dates)
     
     if not _missing_dates.empty:
-        _missing_dates.to_series().to_csv(f"{out_dir}/txt/Missing_{date}.txt")
+        _missing_dates.to_series().to_csv(out_dir / f"txt/Missing_{date}.txt")
     else:
         print("No missing dates to save")
     
@@ -69,7 +69,10 @@ def check_dates(date, ds): ## check completeness of dates
         _wrf_temp = _ds_sub[["temp"]].groupby("time.month").mean("time")
         _wrf_rain = _ds_sub[["rain"]].groupby("time.month").sum("time")
     
-    
+        _mask = xr.open_dataset(f"{resources_dir}/WRF_LANDMASK_PH.nc")
+        _wrf_temp = _wrf_temp.assign({"aave_temp": _wrf_temp["temp"].where(_mask.LANDMASK == 1).mean(("lat","lon"))})
+        _wrf_rain = _wrf_rain.assign({"aave_rain": _wrf_rain["rain"].where(_mask.LANDMASK == 1).mean(("lat","lon"))})
+        
     return _wrf_temp.combine_first(_wrf_rain) 
 
 
@@ -99,13 +102,12 @@ def read_wrf_out(date): ## open and process _file_dates
         )
     _wrf_comb = _wrf_dugong.combine_first(_wrf_arowana) 
     _wrf_month = check_dates(date, _wrf_comb)
+    
     _obs = open_obs()
 
-    _anom = (_wrf_month - _obs)
+    _anom = (_wrf_month[["temp","rain"]] - _obs)
     
     return {"actual": _wrf_month, "anomaly": _anom}
-
-
 
 def plot_anom(save_nc=False, months=6): ## plot anomalies per month
     start = time.time()
@@ -142,6 +144,15 @@ def plot_anom(save_nc=False, months=6): ## plot anomalies per month
                     ax=ax,
                 )
                 
+                aave = _anom["actual"][f"aave_{var}"].isel(month=0).values.tolist()
+                ax_ann = axes.flatten()[0]
+                ax_ann.annotate(f"AAVE: {np.round(aave, 2)}",
+                            xy=(116.35, 19.2),
+                            xycoords="data",
+                            fontsize=10,
+                            bbox=dict(boxstyle="square", fc="white", pad=0.3, alpha=0.5)
+                            )
+                
                 plot_format(ax)
                 plt.colorbar(p, ax=ax, ticks=levels, shrink=0.35)
                 p.colorbar.ax.set_title(f"[{var_info['units']}]", pad=20, fontsize=10)
@@ -151,7 +162,7 @@ def plot_anom(save_nc=False, months=6): ## plot anomalies per month
                 ax.set_title(plt_title, fontsize=10)
                 
                 fig.savefig(
-                f"{out_dir}/img/wrf_{var}_anomaly_{date}.png", dpi=200, 
+                out_dir / f"img/wrf_{var}_anomaly_{date}.png", dpi=200, 
                 facecolor="white", 
                 bbox_inches="tight",)
                 
@@ -159,9 +170,13 @@ def plot_anom(save_nc=False, months=6): ## plot anomalies per month
                 
         if save_nc == True:
             print("Saving to netCDF")
-            _wrf_nc = _anom["anomaly"].copy().rename({"month": "time"})
+            
+            _wrf_nc = _anom["actual"].copy()
+            _wrf_nc = _wrf_nc.assign({"anom_temp": _anom["anomaly"]["temp"], "anom_rain": _anom["anomaly"]["rain"]})
+            _wrf_nc = _wrf_nc.rename({"month": "time"})
             _wrf_nc = _wrf_nc.assign_coords({"time": np.atleast_1d(pd.to_datetime(date))})
-            _wrf_nc.to_netcdf(f"{out_dir}/nc/wrf_anomaly_{date}.nc")     
+            _wrf_nc.load().to_netcdf(out_dir / f"nc/wrf_anomaly_{date}.nc")     
+            
         else:
             print("No data to save")
             
@@ -170,8 +185,6 @@ def plot_anom(save_nc=False, months=6): ## plot anomalies per month
     
     print(f"▮▮▮ Elapsed time in real time : {datetime.strftime(datetime.utcfromtimestamp(elapsed), '%H:%M:%S')}")
     
-   
-# plot_anom(save_nc=True, months=7)
 
 if __name__ == "__main__":
     save_nc = ""
@@ -194,5 +207,14 @@ if __name__ == "__main__":
             
         elif opt in ("-o", "--months"):
             months = int(arg)
-            
+    
+    out_dir.mkdir(parents=True, exist_ok=True)
+    img_dir = out_dir / "img"
+    txt_dir = out_dir / "txt"
+    nc_dir = out_dir / "nc"
+    
+    img_dir.mkdir(parents=True, exist_ok=True)
+    txt_dir.mkdir(parents=True, exist_ok=True)
+    nc_dir.mkdir(parents=True, exist_ok=True)
+    
     plot_anom(save_nc, months)
