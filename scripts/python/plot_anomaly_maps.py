@@ -154,12 +154,15 @@ def plot_anom(save_nc=False, months=6): ## plot anomalies per month
                             )
                 
                 plot_format(ax)
+                plot_footer(ax) if dat == "anomaly" else ""
                 plt.colorbar(p, ax=ax, ticks=levels, shrink=0.35)
                 p.colorbar.ax.set_title(f"[{var_info['units']}]", pad=20, fontsize=10)
                 
                 month_int = _anom["actual"].month.values[0]
-                plt_title = f"{calendar.month_name[month_int]} {var_info['title']}"
-                ax.set_title(plt_title, fontsize=10)
+                month_str = calendar.month_name[month_int]
+                year_str = pd.to_datetime(date).year
+                plt_title = f"{year_str} {month_str} {var_info['title']}"
+                ax.set_title(plt_title, fontsize=10, y=1.025)
                 
                 fig.savefig(
                 out_dir / f"img/wrf_{var}_anomaly_{date}.png", dpi=200, 

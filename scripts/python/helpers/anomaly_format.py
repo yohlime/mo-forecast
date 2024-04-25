@@ -32,12 +32,20 @@ def plot_format(ax):
         bbox=dict(boxstyle="square,pad=0.3", alpha=0.5),
         alpha=0.65,
     )
-    
     return ax
-    
+
+def plot_footer(ax):
+     ax.text(
+        x=116,
+        y=3.5,
+        s="*baseline: 1971-2000 APHRODITE",
+        fontsize=7,
+    )
+     return ax
+      
 plot_vars = {
     "rain_actual": {
-        "title": "Total Rainfall",
+        "title": "Total Rainfall\n(WRF ensemble)",
         "units": "mm",
         "levels": np.arange(50, 500, 50),
         "colors": [
@@ -54,19 +62,19 @@ plot_vars = {
         ],
     },
     "rain_anomaly": {
-        "title": "Total Rainfall Anomaly",
+        "title": "Total Rainfall Anomaly\n(WRF ensemble minus baseline*)",
         "units": "mm",
         "levels": np.arange(-150, 175, 25),
         "colors": [mp.colors.rgb2hex(mp.cm.get_cmap("BrBG")(i)) for i in range(mp.cm.get_cmap("BrBG").N) ],
     },
     "temp_actual": {
-        "title": "Average Temperature",
+        "title": "Average Temperature\n(WRF ensemble)",
         "units": "°C",
         "levels": np.arange(18, 34, 2),
         "colors": [mp.colors.rgb2hex(mp.cm.get_cmap("YlOrRd")(i)) for i in range(mp.cm.get_cmap("YlOrRd").N) ],
     },
     "temp_anomaly": {
-        "title": "Average Temperature",
+        "title": "Average Temperature\n(WRF ensemble minus baseline*)",
         "units": "°C",
         "levels": np.arange(-2.5, 3., .5),
         "colors": [mp.colors.rgb2hex(mp.cm.get_cmap("coolwarm")(i)) for i in range(mp.cm.get_cmap("coolwarm").N) ],
