@@ -34,14 +34,15 @@ def plot_format(ax):
     )
     return ax
 
-def plot_footer(ax):
-     ax.text(
+def plot_footer(ax, var):
+    footer = "1971-2000 APHRODITE" if var == "temp" else "1998-2015 TRMM"
+    ax.text(
         x=116,
         y=3.5,
-        s="*baseline: 1971-2000 APHRODITE",
+        s=f"*baseline: {footer}",
         fontsize=7,
     )
-     return ax
+    return ax
       
 plot_vars = {
     "rain_actual": {

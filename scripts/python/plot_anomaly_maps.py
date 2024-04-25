@@ -154,7 +154,7 @@ def plot_anom(save_nc=False, months=6): ## plot anomalies per month
                             )
                 
                 plot_format(ax)
-                plot_footer(ax) if dat == "anomaly" else ""
+                plot_footer(ax, var) if dat == "anomaly" else ""
                 plt.colorbar(p, ax=ax, ticks=levels, shrink=0.35)
                 p.colorbar.ax.set_title(f"[{var_info['units']}]", pad=20, fontsize=10)
                 
