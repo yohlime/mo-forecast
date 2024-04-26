@@ -12,12 +12,14 @@ import glob
 import getopt
 from pathlib import Path
 
+from config import Config
 from helpers.anomaly_format import *
 
-resources_dir = "/home/modelman/forecast/scripts/python/resources/nc"
-wrf_dir = "/home/modelman/forecast/output/anomaly/nc"
-inp_dir = "/mnt/Dataserver/Data3/MO_WCR/forecast"
-out_dir = Path("/home/modelman/forecast/output/anomaly")
+conf = Config()
+resources_dir = conf.script_dir / "python/resources/nc"
+wrf_dir = conf.data_dir / "anomaly/nc"
+inp_dir = os.getenv("WRF_SERVER_DIR")
+out_dir = conf.data_dir / "anomaly" #Path("/home/modelman/forecast/output/anomaly")
 
 def set_dates(months):
     global _init_date, _file_date
