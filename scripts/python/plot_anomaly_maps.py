@@ -19,7 +19,7 @@ conf = Config()
 resources_dir = conf.script_dir / "python/resources/nc"
 wrf_dir = conf.data_dir / "anomaly/nc"
 inp_dir = os.getenv("WRF_SERVER_DIR")
-out_dir = conf.data_dir / "anomaly" #Path("/home/modelman/forecast/output/anomaly")
+out_dir = conf.data_dir / "anomaly"
 
 def set_dates(months):
     global _init_date, _file_date
