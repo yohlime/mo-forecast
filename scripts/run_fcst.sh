@@ -175,6 +175,27 @@ slurm_opts+=("-n" "1")
 slurm_opts+=("$EWB_DIR/run_ewb_quicklook.sh")
 prev_jid=$(sbatch "${slurm_opts[@]}")
 
+### For WRF Anomaly every 1st day of the month and for Arowana only
+date=$(date +"%d")
+hostname=$(hostname -s)
+### check date if 1st day of the month
+if [ $date == 01 ] && [ $hostname == "arowana" ]; then
+    echo "Calculating Anomalies"  ### Anomaly plots
+
+    mkdir -p "$POST_LOG_DIR/anomaly"
+    log_file="$POST_LOG_DIR/anomaly/anom_$FCST_YYYYMMDD.log"
+    slurm_opts=("${SLURM_OPTS0[@]}")
+    slurm_opts+=("-d" "afterany:$prev_jid")
+    slurm_opts+=("-J" "anom-$FCST_YYYYMMDD")
+    slurm_opts+=("-o" "$log_file")
+    slurm_opts+=("-n" "1")
+    slurm_opts+=("$SCRIPT_DIR/run_anomaly.sh")
+    prev_jid=$(sbatch "${slurm_opts[@]}")
+
+else
+    echo "nothing to run"  ### Nothing to run
+fi
+
 ### Notifier
 mkdir -p "$POST_LOG_DIR/alert"
 log_file="$POST_LOG_DIR/alert/alert_$FCST_YYYYMMDD$FCST_ZZ.log"
