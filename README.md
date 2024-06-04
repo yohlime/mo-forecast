@@ -52,5 +52,5 @@ git pull
 ### 2. Update conda environment
 ```
 cd ~/forecast
-conda env update -p ./venv -f ./venv.yaml --prune
+mamba env update -p ./venv -f ./venv.yaml --prune
 ```
