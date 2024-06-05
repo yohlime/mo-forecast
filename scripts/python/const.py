@@ -115,6 +115,12 @@ plot_vars_24hr = {
         "levels": rain_levs_24hr,
         "colors": rain_color,
     },
+    "rainx_clim": {
+        "title": "Areas with Potential Extreme Rainfall",
+        "units": "mm/\n24hrs",
+        "levels": rain_levs_24hr,
+        "colors": rain_color,
+    },
     "ppv": {
         "title": "-Hr Total Solar Power Potential [MW/hectare]",
         "units": "MW/\nhectare",

@@ -59,7 +59,7 @@ def plot_maps(ds, out_dir):
                         das[f"run{int(ens_idx)+1}"] = ds[var_name].isel(
                             time=t, ens=ens_idx
                         )
-            elif var_name == "rainx":
+            elif var_name in ["rainx", "rainx_clim"]:
                 das = {"ens": ds["rain"].isel(time=t).mean("ens")}
                 das_regrid =  mask(regrid(ds["rain"].mean("ens"), open_ref()))
             elif var_name == "temp":
@@ -110,10 +110,14 @@ def plot_maps(ds, out_dir):
                 ax.set_extent((*xlim, *ylim))
 
                 if var_name == "rainx":
-                    # extreme_da = model_agreement(ds["rain"].isel(time=t))
-                    das_ari = run_interp(das_regrid).isel(time=t)
-                    das_ari = regrid(das_ari, ds[["lat", "lon"]], method="conservative")
-                    da = da.where(das_ari["rain"] >= 5)
+                    filt_ari = run_interp(das_regrid).isel(time=t)
+                    filt_ari = regrid(filt_ari, ds[["lat", "lon"]], method="conservative")
+                    da = da.where(filt_ari["rain"] >= 5)
+                    
+                elif var_name == "rainx_clim":
+                    filt_month = model_agreement(ds["rain"].isel(time=t))
+                    da = da.where(filt_month >= 2)
+                        
                 elif var_name == "temp":
                     p = _das[da_name].plot.contour(
                         ax=ax,
@@ -175,6 +179,17 @@ def plot_maps(ds, out_dir):
                         cbar_kwargs=dict(shrink=0.5),
                     )
                 if var_name == "rainx":  # from previous extreme < 2 to ari >=5
+                    da.plot.contourf(
+                        ax=ax,
+                        transform=conf.plot_proj,
+                        levels=levels,
+                        colors=colors, # previously white
+                        alpha=1,
+                        extend="both",
+                        add_labels=False,
+                        add_colorbar=False,
+                    )
+                if var_name == "rainx_clim":  # from previous extreme < 2 to ari >=5
                     da.plot.contourf(
                         ax=ax,
                         transform=conf.plot_proj,
