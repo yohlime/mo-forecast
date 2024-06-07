@@ -175,6 +175,19 @@ slurm_opts+=("-n" "1")
 slurm_opts+=("$EWB_DIR/run_ewb_quicklook.sh")
 prev_jid=$(sbatch "${slurm_opts[@]}")
 
+
+### ECW-validation for extreme rainfall only
+mkdir -p "$POST_LOG_DIR/validation"
+log_file="$POST_LOG_DIR/validation/valid_$FCST_YYYYMMDD$FCST_ZZ.log"
+slurm_opts=("${SLURM_OPTS0[@]}")
+slurm_opts+=("-d" "afterany:$prev_jid")
+slurm_opts+=("-J" "ecw_valid-$FCST_YYYYMMDD$FCST_ZZ")
+slurm_opts+=("-o" "$log_file")
+slurm_opts+=("-n" "1")
+slurm_opts+=("$VALID_DIR/run_rain_extreme_verification.sh")
+prev_jid=$(sbatch "${slurm_opts[@]}")
+
+
 ### For WRF Anomaly every 1st day of the month and for Arowana only
 date=$(date +"%d")
 hostname=$(hostname -s)
