@@ -2,7 +2,8 @@ import pytest
 from config import Config
 
 
-def test_config_default():
+def test_config_default(monkeypatch):
+    monkeypatch.undo()
     with pytest.warns(UserWarning):
         conf = Config()
         assert str(conf.tz) == "Asia/Manila"
@@ -15,17 +16,23 @@ def test_config_default():
 
 
 def test_config(monkeypatch):
-    monkeypatch.setenv("OUTDIR", "forecast/output")
-    monkeypatch.setenv("WRF_REALDIR", "forecast/model/WRF")
-    monkeypatch.setenv("SCRIPT_DIR", "forecast/scripts")
-    monkeypatch.setenv("WRF_FCST_DAYS", "5")
-    monkeypatch.setenv("WRF_RUN_NAMES", "run1:run2:run3")
+    outdir = "forecast/output"
+    wrf_realdir = "forecast/model/WRF"
+    script_dir = "forecast/scripts"
+    ndays = 17
+    run_names = ("run1", "xrun33", "walk85", "simbest")
+
+    monkeypatch.setenv("OUTDIR", outdir)
+    monkeypatch.setenv("WRF_REALDIR", wrf_realdir)
+    monkeypatch.setenv("SCRIPT_DIR", script_dir)
+    monkeypatch.setenv("WRF_FCST_DAYS", f"{ndays}")
+    monkeypatch.setenv("WRF_RUN_NAMES", ":".join(run_names))
 
     conf = Config()
     assert str(conf.tz) == "Asia/Manila"
-    assert str(conf.data_dir) == "forecast/output"
-    assert str(conf.wrf_realdir) == "forecast/model/WRF"
-    assert str(conf.script_dir) == "forecast/scripts"
-    assert conf.wrf_forecast_days == 5
+    assert str(conf.data_dir) == outdir
+    assert str(conf.wrf_realdir) == wrf_realdir
+    assert str(conf.script_dir) == script_dir
+    assert conf.wrf_forecast_days == ndays
     for i, wrf_dir in enumerate(conf.wrf_dirs):
-        assert wrf_dir.name == f"run{i+1}"
+        assert wrf_dir.name == run_names[i]

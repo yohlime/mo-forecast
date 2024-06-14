@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+import argparse
+import os
+from pathlib import Path
+import multiprocessing
+
+
+def real(ntasks: int, errcore=None):
+    for i in range(ntasks):
+        if errcore is not None and i == errcore:
+            Path(f"./rsl.error.{i:04d}").write_text(
+                "d01 2024-06-17_18:00:00 real: ERROR REAL"
+            )
+        else:
+            Path(f"./rsl.error.{i:04d}").write_text(
+                "d01 2024-06-17_18:00:00 real: SUCCESS COMPLETE REAL"
+            )
+    Path("./wrfbdy_d01").touch()
+    Path("./wrfinput_d01").touch()
+
+
+def wrf(ntasks: int, errcore=None):
+    for i in range(ntasks):
+        if errcore is not None and i == errcore:
+            Path(f"./rsl.error.{i:04d}").write_text(
+                "d01 2024-06-17_18:00:00 wrf: ERROR WRF"
+            )
+        else:
+            Path(f"./rsl.error.{i:04d}").write_text(
+                "d01 2024-06-17_18:00:00 wrf: SUCCESS COMPLETE WRF"
+            )
+
+
+def main():
+    parser = argparse.ArgumentParser(description="srun")
+    parser.add_argument("executable", help="Path of the executable")
+    parser.add_argument(
+        "-n", "--ntasks", type=int, help="Specify the number of tasks to run"
+    )
+
+    args = parser.parse_args()
+
+    ntasks = args.ntasks
+    if ntasks is None:
+        ntasks = 1
+        _ntasks = os.getenv("SLURM_NTASKS")
+        if _ntasks is not None:
+            ntasks = int(_ntasks)
+
+    if "wrf" in args.executable:
+        process = multiprocessing.Process(target=wrf, args=(ntasks,))
+        process.start()
+        process.join()
+    elif "real" in args.executable:
+        process = multiprocessing.Process(target=real, args=(ntasks,))
+        process.start()
+        process.join()
+    else:
+        msg = f"srun: running {args.executable}"
+        if ntasks is not None:
+            msg += f" {ntasks} times"
+        print(msg)
+
+
+if __name__ == "__main__":
+    main()

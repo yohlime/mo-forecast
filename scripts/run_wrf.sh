@@ -5,15 +5,15 @@ source "$SCRIPT_DIR/set_env_wrf.run.sh"
 #     Link the ICBC in this model directory    #
 # -------------------------------------------- #
 cd "$WRF_REALDIR" || exit
-rm met_em.d0*
+rm -f met_em.d0*
 
 NUM_TIMESTEPS=$((WRF_FCST_DAYS * 24 + 1))
 MET_EM_FILES=("$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF"/met_em.d0*)
 if [ ${#MET_EM_FILES[@]} -ne $NUM_TIMESTEPS ]; then
-  err_msg="number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
-  echo "$err_msg" >>"$ERROR_FILE"
-  echo "$err_msg"
-  exit 1
+	err_msg="number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
+	echo "$err_msg" >>"$ERROR_FILE"
+	echo "$err_msg"
+	exit 1
 fi
 
 ln -s "$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF"/met_em.d0* .
@@ -51,15 +51,15 @@ echo " End of REAL "
 echo "  ********************  "
 
 if [[ $WRF_MODE == '3dvar' ]]; then
-  mkdir -p "$WRF_REALDIR/wrfreal_tmp"
-  mv wrfbdy_d01 "$WRF_REALDIR/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
-  mv wrfinput_d01 "$WRF_REALDIR/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
+	mkdir -p "$WRF_REALDIR/wrfreal_tmp"
+	mv wrfbdy_d01 "$WRF_REALDIR/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
+	mv wrfinput_d01 "$WRF_REALDIR/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
 
-  source "$SCRIPT_DIR/run_wrfda_pre.sh"
+	source "$SCRIPT_DIR/run_wrfda_pre.sh"
 
-  cd "$WRF_REALDIR" || exit
-  ln -s "$WRF_MAINDIR/WRF3DVar/wrfinput_d01" .
-  ln -s "$WRF_MAINDIR/WRF3DVar/wrfbdy_d01" .
+	cd "$WRF_REALDIR" || exit
+	ln -s "$WRF_MAINDIR/WRF3DVar/wrfinput_d01" .
+	ln -s "$WRF_MAINDIR/WRF3DVar/wrfbdy_d01" .
 fi
 
 # -------------------------------------------- #
@@ -80,5 +80,7 @@ mkdir -p "$NAMELIST_RUN"
 
 mv "wrfout_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}_00_00" "$NAMELIST_RUN/wrfout_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}_00_00_${WRF_FCST_DAYS}-day_fcst_rain"
 
-rm "$WRF_REALDIR/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
-rm "$WRF_REALDIR/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
+if [[ $WRF_MODE == '3dvar' ]]; then
+	rm "$WRF_REALDIR/wrfreal_tmp/wrfinput_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
+	rm "$WRF_REALDIR/wrfreal_tmp/wrfbdy_d01_${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}"
+fi
