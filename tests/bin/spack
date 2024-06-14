@@ -1,0 +1,48 @@
+#!/usr/bin/env python
+import argparse
+
+
+def env_activate(args):
+    print(f"Activating environment: {args.env_name}")
+
+
+def load(args):
+    print(f"Loading: {args.to_load}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="spack")
+
+    subparsers = parser.add_subparsers(
+        title="subcommands", description="valid subcommands", help="subcommand help"
+    )
+
+    parser_env = subparsers.add_parser("env", help="Environment management commands")
+    env_subparsers = parser_env.add_subparsers(
+        title="env subcommands",
+        description="valid env subcommands",
+        help="env subcommand help",
+    )
+
+    parser_env_activate = env_subparsers.add_parser(
+        "activate", help="Activate an environment"
+    )
+    parser_env_activate.add_argument(
+        "env_name", type=str, help="Name of the environment to activate"
+    )
+    parser_env_activate.set_defaults(func=env_activate)
+
+    parser_load = subparsers.add_parser("load", help="Load something")
+    parser_load.add_argument("to_load", type=str, help="Something to load")
+    parser_load.set_defaults(func=load)
+
+    args = parser.parse_args()
+
+    if hasattr(args, "func"):
+        args.func(args)
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    main()
