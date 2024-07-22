@@ -44,13 +44,11 @@ def set_dates(months):
 
 
 def open_obs():  ## open observed climatological datasets
-    trmm = xr.open_dataset(f"{resources_dir}/trmm_1998-2015_clim.nc")
+    gsmap = xr.open_dataset(f"{resources_dir}/gsmap_2001-2020_clim.nc")
+    gsmap = gsmap.rename({"longitude": "lon", "latitude": "lat"})
     aphrodite = xr.open_dataset(f"{resources_dir}/APHRODITE_1971-2000_clim.nc")
 
-    trmm = trmm.transpose("time", "lat", "lon").groupby("time.month").mean("time")
-    trmm = trmm.rename({"precipitation": "rain"})
-
-    return xr.merge([trmm, aphrodite])
+    return xr.merge([gsmap, aphrodite])
 
 
 def check_dates(date, ds):  ## check completeness of dates
