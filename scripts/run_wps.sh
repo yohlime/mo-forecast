@@ -4,15 +4,16 @@ source "$SCRIPT_DIR/set_env_wrf.run.sh"
 
 cd "${WRF_MAINDIR}/WPS" || exit
 
-mkdir "$NAMELIST_SUFF"
+### GFS
+mkdir -p "$NAMELIST_SUFF/gfs"
 
 WPS_START_DATE="${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}:00:00"
 WPS_END_DATE="${FCST_YY2}-${FCST_MM2}-${FCST_DD2}_${FCST_ZZ2}:00:00"
-sed -i "4s/.*/\ start_date = '${WPS_START_DATE}','${WPS_START_DATE}',/" "namelist.wps_$NAMELIST_SUFF"
-sed -i "5s/.*/\ end_date   = '${WPS_END_DATE}','${WPS_END_DATE}',/" "namelist.wps_$NAMELIST_SUFF"
+sed -i "4s/.*/\ start_date = '${WPS_START_DATE}','${WPS_START_DATE}',/" "namelist.wps_gfs_$NAMELIST_SUFF"
+sed -i "5s/.*/\ end_date   = '${WPS_END_DATE}','${WPS_END_DATE}',/" "namelist.wps_gfs_$NAMELIST_SUFF"
 
 rm -f namelist.wps
-ln -s "namelist.wps_$NAMELIST_SUFF" namelist.wps
+ln -s "namelist.wps_gfs_$NAMELIST_SUFF" namelist.wps
 
 rm -f "$NAMELIST_SUFF"/geo_em*
 echo "************************"
@@ -38,7 +39,7 @@ ln -sf "$GFS_DIR"/*.grb "$WPS_GFSDIR"/.
 ./link_grib.csh "$WPS_GFSDIR"/*.grb
 #ln -s ungrib/Variable_Tables/Vtable.GFS Vtable #new line added; one time use
 
-rm -f FILE:*
+rm -f GFS:*
 echo "************************"
 echo "*   start of ungrib    *"
 echo "************************"
@@ -55,7 +56,7 @@ echo "************************"
 echo "*    end of ungrib     *"
 echo "************************"
 
-rm -f "$NAMELIST_SUFF"/met_em.d0*
+rm -f "$NAMELIST_SUFF"/gfs/met_em.d0*
 echo "************************"
 echo "*   start of metgrid   *"
 echo "************************"
@@ -73,5 +74,70 @@ echo "*    end of metgrid    *"
 echo "************************"
 
 rm -f geo_em*
-rm -f FILE:*
+
+
+### ECMWF
+mkdir -p "$NAMELIST_SUFF/ecmwf"
+
+WPS_START_DATE="${FCST_YY}-${FCST_MM}-${FCST_DD}_${FCST_ZZ}:00:00"
+WPS_END_DATE="${FCST_YY2}-${FCST_MM2}-${FCST_DD2}_${FCST_ZZ2}:00:00"
+sed -i "4s/.*/\ start_date = '${WPS_START_DATE}','${WPS_START_DATE}',/" "namelist.wps_ecmwf_$NAMELIST_SUFF"
+sed -i "5s/.*/\ end_date   = '${WPS_END_DATE}','${WPS_END_DATE}',/" "namelist.wps_ecmwf_$NAMELIST_SUFF"
+
+rm -f namelist.wps
+ln -s "namelist.wps_ecmwf_$NAMELIST_SUFF" namelist.wps
+
+rm -f "$NAMELIST_SUFF"/geo_em*
+echo "************************"
+echo "*   start of geogrid   *"
+echo "************************"
+srun -n 1 ./geogrid.exe >&log.geogrid &
+tail --pid=$! -f log.geogrid
+if ! tail -n 5 "log.geogrid" | grep -q "Successful"; then
+  echo "geogrid" >>"$ERROR_FILE"
+  echo "************************"
+  echo "*     geogrid error    *"
+  echo "************************"
+  exit 1
+fi
+echo "************************"
+echo "*    end of geogrid    *"
+echo "************************"
+
+rm -f GRIBFILE.*
+# Update ECMWF link
+rm -f "$WPS_ECMWFDIR"/*.nc
+ln -sf "$ECMWF_NC_DIR"/*.nc "$WPS_ECMWFDIR"/.
+
+rm -f ECMWF:*
+echo "------------------"
+echo " Start of Ungrib "
+echo "------------------"
+cd "$SCRIPT_DIR/python" || exit
+$PYTHON convert_nc_interfile.py -i "$WPS_ECMWFDIR" -o "${WRF_MAINDIR}/WPS" "${FCST_YYYYMMDD}"
+cd "${WRF_MAINDIR}/WPS" || exit
+echo "------------------"
+echo " End of Ungrib "
+echo "------------------"
+
+rm -f "$NAMELIST_SUFF"/ecmwf/met_em.d0*
+echo "************************"
+echo "*   start of metgrid   *"
+echo "************************"
+srun ./metgrid.exe >&log.metgrid &
+tail --pid=$! -f log.metgrid
+if ! tail -n 5 "log.metgrid" | grep -q "Successful"; then
+  echo "metgrid" >>"$ERROR_FILE"
+  echo "************************"
+  echo "*     metgrid error    *"
+  echo "************************"
+  exit 1
+fi
+echo "************************"
+echo "*    end of metgrid    *"
+echo "************************"
+
+rm -f geo_em*
+rm -f GFS:*
+rm -f ECMWF:*
 rm -f GRIB*
