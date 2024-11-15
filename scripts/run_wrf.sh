@@ -8,30 +8,22 @@ cd "$WRF_REALDIR" || exit
 rm -f met_em.d0*
 
 NUM_TIMESTEPS=$((WRF_FCST_DAYS * 24 + 1))
+
+MET_EM_DIR="$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF/gfs"
 if [ "${NAMELIST_RUN}" -eq 3 ]; then
-	MET_EM_FILES=("$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF"/ecmwf/met_em.d0*)
-	if [ ${#MET_EM_FILES[@]} -ne $NUM_TIMESTEPS ]; then
-		err_msg="number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
-		echo "$err_msg" >>"$ERROR_FILE"
-		echo "$err_msg"
-		exit 1
-	fi
-
-	ln -s "$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF"/ecmwf/met_em.d0* .
-	for f in met_em.*; do mv -v "$f" "$(echo "$f" | tr ':' '_')"; done
-
-else
-	MET_EM_FILES=("$WRF_MAINDIR/WPS_GFS/$WPS_NAMELIST_SUFF"/gfs/met_em.d0*)
-	if [ ${#MET_EM_FILES[@]} -ne $NUM_TIMESTEPS ]; then
-		err_msg="number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
-		echo "$err_msg" >>"$ERROR_FILE"
-		echo "$err_msg"
-		exit 1
-	fi
-
-	ln -s "$WRF_MAINDIR/WPS_GFS/$WPS_NAMELIST_SUFF"/gfs/met_em.d0* .
-	for f in met_em.*; do mv -v "$f" "$(echo "$f" | tr ':' '_')"; done
+  MET_EM_DIR="$WRF_MAINDIR/WPS/$WPS_NAMELIST_SUFF/ecmwf"
 fi
+
+MET_EM_FILES=("${MET_EM_DIR}"/met_em.d0*)
+if [ ${#MET_EM_FILES[@]} -ne $NUM_TIMESTEPS ]; then
+  err_msg="number of met_em files: ${#MET_EM_FILES[@]}, expected: $NUM_TIMESTEPS"
+  echo "$err_msg" >>"$ERROR_FILE"
+  echo "$err_msg"
+  exit 1
+fi
+
+ln -s "${MET_EM_DIR}"/met_em.d0* .
+for f in met_em.*; do mv -v "$f" "$(echo "$f" | tr ':' '_')"; done
 
 # -------------------------------------------- #
 #             Edit namelist.input              #
