@@ -89,6 +89,16 @@ def proc(in_dir, out_dir):
 
     ds = xr.merge([ds_mslp, ds_ght, ds_shrline])
 
+    # --- History append ---
+    old = ds.attrs.get("history", "")
+    new = (
+        "2026-01-19: GFS domain download extended to 100E to 160E, 0N to 30N\n"
+        "2026-02-09: Added u, v, q at 1000, 975, 950, 925 hPa to the dataset\n"
+        "2026-02-09: Added mslp and gh at 1000 and 850 hPa to the dataset"
+    )
+
+    ds.attrs["history"] = old + "\n" + new if old else new
+
     ts = pd.to_datetime(ds.time.values[0])
     out_file = out_dir / f"gfs_{ts:%Y-%m-%d_%H}_3hrly.nc"
     out_file.parent.mkdir(parents=True, exist_ok=True)
